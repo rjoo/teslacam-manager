@@ -13,10 +13,10 @@ server.use(cors())
  * @example /video?filepath=
  */
 server.get('/video', (req, res) => {
-  let filename = req.query.filepath
+  let filepath = req.query.filepath
   
-  if (filename.includes('TeslaCam') && filename.endsWith('mp4'))
-    res.sendFile(filename)
+  if (tcam.isTeslaCamVideoFilepath(filepath))
+    res.sendFile(filepath)
   else
     res.status(400).json({
       error: 'Not a TeslaCam video file'

@@ -24,6 +24,10 @@ function parseFilename(filename) {
   }
 }
 
+export const isTeslaCamVideoFilepath = (filepath) => {
+  return filepath.includes('TeslaCam') && filepath.endsWith('mp4')
+}
+
 /**
  * Scans user's drives to auto-detect TeslaCam directory
  * @todo Multiple drives detection
