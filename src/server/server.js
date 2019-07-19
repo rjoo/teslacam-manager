@@ -8,6 +8,10 @@ const tcam = require('./teslacam')
 server.use(express.json())
 server.use(cors())
 
+server.get('/', (req, res) => {
+  res.status(200).send('OK')
+})
+
 /**
  * Sends requested teslacam video file
  * @example /video?filepath=

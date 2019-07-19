@@ -5,24 +5,33 @@ import {
   createProtocol,
   installVueDevtools
 } from 'vue-cli-plugin-electron-builder/lib'
+import path from 'path';
 const isDevelopment = process.env.NODE_ENV !== 'production'
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
-let win
+let bgServer, win
 
 // Scheme must be registered before the app is ready
 protocol.registerStandardSchemes(['app'], { secure: true })
 
 function createWindow () {
   // Create the browser window.
+  bgServer = new BrowserWindow({
+    show: false,
+    webPreferences: {
+      nodeIntegration: true
+    }
+  })
   win = new BrowserWindow({
-    width: 1200,
+    width: 1600,
     height: 900,
     webPreferences: {
       nodeIntegration: true
     }
   })
+
+  bgServer.loadFile(path.resolve(__dirname, '../public/server.html'))
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
@@ -35,6 +44,7 @@ function createWindow () {
   }
 
   win.on('closed', () => {
+    bgServer = null
     win = null
   })
 }
@@ -60,8 +70,6 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
-  require('./server/server')
-
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {

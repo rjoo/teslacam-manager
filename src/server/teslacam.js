@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const ffprobe = require('ffprobe')
 const { downloadBinaries, detectPlatform } = require('ffbinaries')
-const { app } = require('electron')
+const { app } = require('electron').remote
 
 /**
  * @param {String} filename '2019-06-29_15-29-28-front.mp4'
@@ -24,7 +24,32 @@ function parseFilename(filename) {
   }
 }
 
-export const isTeslaCamVideoFilepath = (filepath) => {
+/**
+ * @param {String} dirpath Path to directory with videos
+ * @returns {Array} videos
+ */
+function getVideosFromPath(dirpath) {
+  const filenames = fs.readdirSync(dirpath)
+  const videos = filenames.map(filename => {
+    let { date, timestamp, camera } = parseFilename(filename)
+    const filepath = `${dirpath}${path.sep}${filename}`
+    const stats = fs.statSync(filepath)
+    const size = parseInt(stats.size / 1000000)
+
+    return {
+      camera,
+      date,
+      filepath,
+      id: filename,
+      timestamp,
+      sizeInMegabytes: size
+    }
+  })
+
+  return videos
+}
+
+const isTeslaCamVideoFilepath = (filepath) => {
   return filepath.includes('TeslaCam') && filepath.endsWith('mp4')
 }
 
@@ -32,7 +57,7 @@ export const isTeslaCamVideoFilepath = (filepath) => {
  * Scans user's drives to auto-detect TeslaCam directory
  * @todo Multiple drives detection
  */
-export const scanDrives = () => {
+const scanDrives = () => {
   return new Promise((resolve, reject) => {
     drivelist.list()
       .then(drives => {
@@ -61,7 +86,7 @@ export const scanDrives = () => {
  * Retrieves from cache if already detected
  * @returns {Promise}
  */
-export const getBinaries = () => {
+const getBinaries = () => {
   return new Promise((resolve, reject) => {
     const platform = detectPlatform()
     const ffPaths = {
@@ -82,11 +107,11 @@ export const getBinaries = () => {
 
         ffPaths.ffprobe = path.join(
           ffprobe.path,
-          ffprobe.filename + (platform.includes('win-') ? '.exe' : '')
+          ffprobe.filename
         )
         ffPaths.ffmpeg = path.join(
           ffmpeg.path,
-          ffmpeg.filename + (platform.includes('win-') ? '.exe' : '')
+          ffmpeg.filename
         )
 
         resolve(ffPaths)
@@ -99,33 +124,33 @@ export const getBinaries = () => {
  * @param {Object} paths Path to ff binaries and teslacam dir
  * @param {String} type 'recent' or 'saved'
  */
-export const getData = (paths = {}, type = 'recent') => {
+const getData = (paths = {}, type = 'recent') => {
   let videosPath = paths.teslaCamDir
+  let videos
 
-  if (type === 'recent')
+  if (type === 'recent') {
     videosPath += path.sep + 'RecentClips'
-  else if (type === 'saved')
+  } else if (type === 'saved') {
     videosPath += path.sep + 'SavedClips'
+  }
 
-  const filenames = fs.readdirSync(videosPath)
-  const videos = filenames.map(filename => {
-    let { date, timestamp, camera } = parseFilename(filename)
-    const filepath = `${videosPath}${path.sep}${filename}`
-    const stats = fs.statSync(filepath)
-    const size = parseInt(stats.size / 1000000)
+  if (!fs.existsSync(videosPath))
+    return Promise.resolve([])
 
-    return {
-      camera,
-      date,
-      filepath,
-      id: filename,
-      timestamp,
-      sizeInMegabytes: size
-    }
-  })
+  if (type === 'recent') {
+    videos = getVideosFromPath(videosPath)
+  } else if (type === 'saved') {
+    videos = []
+
+    const savedDirs = fs.readdirSync(videosPath)
+    savedDirs.forEach(savedDir => {
+      videos = videos.concat(getVideosFromPath(
+        path.join(videosPath, savedDir)
+      ))
+    })
+  }
 
   const videosMap = {}
-
   const probes = videos.map(video => {
     return new Promise((res) => {
       ffprobe(video.filepath, { path: paths.ffprobe })
@@ -135,7 +160,7 @@ export const getData = (paths = {}, type = 'recent') => {
           res(video)
         })
         .catch((e) => {
-          video.error = e
+          video.error = true
           res(video)
         })
     })
@@ -158,4 +183,11 @@ export const getData = (paths = {}, type = 'recent') => {
 
     return videosMap
   })
+}
+
+module.exports = {
+  isTeslaCamVideoFilepath,
+  scanDrives,
+  getBinaries,
+  getData
 }
