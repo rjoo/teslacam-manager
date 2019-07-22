@@ -10,7 +10,7 @@
       v-else
       v-for="(value, key) in videos"
       :key="key"
-      :class="{ 'is-active': current.type === 'recent' && current.timestamp === key}"
+      :class="{ 'is-active': current.type === type && current.timestamp === key}"
       active-class="default-class is-active"
       ripple
       @click="onListItemClick(key, value)"
@@ -88,6 +88,11 @@ export default {
            */
         }
       }
+    },
+
+    type: {
+      type: String,
+      default: ''
     }
   },
 
@@ -103,7 +108,7 @@ export default {
     onListItemClick(timestamp, { videos }) {
       this.$store.commit(
         'SET_CURRENTLY_PLAYING',
-        { type: 'recent', timestamp, videos }
+        { type: this.type, timestamp, videos }
       )
     },
 
