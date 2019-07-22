@@ -19,14 +19,16 @@
           @click="expandedCamera = expandedCamera === cam ? null : cam"
         >
           <video-element
-            ref="video"
+            ref="videos"
+            :camera="cam"
             :class="['video', `video-${cam}`]"
             :src="getVideoSrc(cam)"
             autoplay
-            @ended="isPlaying = false"
+            @ended="onEnded($event, cam)"
+            @loaded="onLoaded($event, cam)"
             @pause="isPlaying = false"
             @play="isPlaying = true"
-            @timeupdate="onTimeUpdate" />
+            @timeupdate="onTimeUpdate($event, cam)" />
   
           <v-card class="video-overlay">
             <v-layout column fill-height justify-space-between>
@@ -68,7 +70,7 @@
               <v-flex>
                 <v-slider
                   :value="currentTime.toFixed(4)"
-                  :max="getMaxDuration()"
+                  :max="maxDuration"
                   thumb-size="48"
                   step="0.1"
                   @mousedown="onMouseDown"
@@ -76,7 +78,7 @@
                   @change="onChange"
                 ></v-slider>
               </v-flex>
-              <v-flex shrink><v-chip small>{{ formatDuration(getMaxDuration()) }}</v-chip></v-flex>
+              <v-flex shrink><v-chip small>{{ formatDuration(maxDuration) }}</v-chip></v-flex>
             </v-layout>
           </v-flex>
         </v-layout>
@@ -105,9 +107,11 @@ export default {
 
   data() {
     return {
-      expandedCamera: null,
       currentTime: 0,
-      isPlaying: true
+      expandedCamera: null,
+      isPlaying: true,
+      maxDuration: 0,
+      maxDurationCam: '',
     } 
   },
 
@@ -139,15 +143,14 @@ export default {
   },
 
   watch: {
-    // videos: {
-    //   handler() {
-    //     this.videos.forEach(vid => {
-          
-    //     })
-    //   },
-    //   immediate: true,
-    //   deep: true
-    // }
+    videos: {
+      handler() {
+        this.maxDuration = 0
+        this.maxDurationCam = ''
+      },
+      immediate: true,
+      deep: true
+    }
   },
 
   methods: {
@@ -164,8 +167,8 @@ export default {
      * @todo Make this a property of the instance with a watcher
      */
     getMaxDuration() {
-      return this.$refs.video && this.$refs.video.length
-        ? Math.max(...this.$refs.video.map(vid => 
+      return this.$refs.videos && this.$refs.videos.length
+        ? Math.max(...this.$refs.videos.map(vid => 
           (vid.$el && vid.$el.duration) ? vid.$el.duration : 0)
         ) : 0
     },
@@ -181,7 +184,7 @@ export default {
     },
 
     fullscreen(camera) {
-      const vidEl = this.$refs.video.find(vid => 
+      const vidEl = this.$refs.videos.find(vid => 
         vid.$el.classList.contains(`video-${camera}`
       )).$el
 
@@ -194,27 +197,45 @@ export default {
     },
 
     play() {
-      this.$refs.video.forEach(vid => vid.$el.play())
+      this.$refs.videos.forEach(vid => vid.$el.play())
     },
 
     pause() {
-      this.$refs.video.forEach(vid => vid.$el.pause())
+      this.$refs.videos.forEach(vid => vid.$el.pause())
     },
 
     forward() {
-      this.$refs.video.forEach(vid => vid.$el.currentTime += 10)
+      this.$refs.videos.forEach(vid => vid.$el.currentTime += 10)
     },
 
     rewind() {
-      this.$refs.video.forEach(vid => vid.$el.currentTime -= 10)
+      this.$refs.videos.forEach(vid => vid.$el.currentTime -= 10)
     },
 
     resyncTime() {
-      this.$refs.video.forEach(vid => vid.$el.currentTime = this.currentTime)
+      this.$refs.videos.forEach(vid => vid.$el.currentTime = this.currentTime)
     },
 
-    onTimeUpdate(e) {
-      this.currentTime = e.target.currentTime
+    onEnded(e, cam) {
+      if (this.maxDurationCam === cam) {
+        this.pause()
+      }
+    },
+
+    onLoaded(e, cam) {
+      console.log('loaded')
+      const duration = e.target.duration
+
+      if (duration > this.maxDuration) {
+        this.maxDuration = duration
+        this.maxDurationCam = cam
+      }
+    },
+
+    onTimeUpdate(e, cam) {
+      if (this.maxDurationCam === cam) {
+        this.currentTime = e.target.currentTime
+      }
     },
 
     videoCameraHasError(camera) {
@@ -224,7 +245,7 @@ export default {
 
     // Refactor to seekbar component
     onChange(value) {
-      this.$refs.video.forEach(vid => vid.$el.currentTime = +value)
+      this.$refs.videos.forEach(vid => vid.$el.currentTime = +value)
     },
 
     onMouseDown() {
