@@ -79,4 +79,8 @@ server.post('/teslacam/data', async (req, res) => {
   res.json(data)
 })
 
-server.listen(port)
+module.exports = {
+  startServer() {
+    server.listen(port)
+  }
+}

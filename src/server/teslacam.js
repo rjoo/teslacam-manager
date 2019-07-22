@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 const ffprobe = require('ffprobe')
 const { downloadBinaries, detectPlatform } = require('ffbinaries')
-const { app } = require('electron').remote
+const { app } = require('electron')
 
 /**
  * @param {String} filename '2019-06-29_15-29-28-front.mp4'
@@ -135,7 +135,7 @@ const getData = (paths = {}, type = 'recent') => {
   }
 
   if (!fs.existsSync(videosPath))
-    return Promise.resolve([])
+    return Promise.resolve({})
 
   if (type === 'recent') {
     videos = getVideosFromPath(videosPath)
@@ -151,38 +151,38 @@ const getData = (paths = {}, type = 'recent') => {
   }
 
   const videosMap = {}
-  const probes = videos.map(video => {
-    return new Promise((res) => {
-      ffprobe(video.filepath, { path: paths.ffprobe })
-        .then(info => {
-          video.duration = info.streams[0].duration
-          video.codec = info.streams[0].codec_name
-          res(video)
-        })
-        .catch((e) => {
-          video.error = true
-          res(video)
-        })
-    })
-  })
+  // const probes = videos.map(video => {
+  //   return new Promise((res) => {
+  //     ffprobe(video.filepath, { path: paths.ffprobe })
+  //       .then(info => {
+  //         video.duration = info.streams[0].duration
+  //         video.codec = info.streams[0].codec_name
+  //         res(video)
+  //       })
+  //       .catch((e) => {
+  //         video.error = true
+  //         res(video)
+  //       })
+  //   })
+  // })
 
-  return Promise.all(probes).then(videos => {
-    videos.forEach(video => {
-      if (!videosMap[video.timestamp]) {
-        videosMap[video.timestamp] = {
-          videos: [],
-          duration: video.duration,
-          sizeInMegabytes: video.sizeInMegabytes
-        }
-      } else {
-        videosMap[video.timestamp].sizeInMegabytes += video.sizeInMegabytes
+  // return Promise.all(probes).then(videos => {
+  videos.forEach(video => {
+    if (!videosMap[video.timestamp]) {
+      videosMap[video.timestamp] = {
+        videos: [],
+        duration: video.duration,
+        sizeInMegabytes: video.sizeInMegabytes
       }
+    } else {
+      videosMap[video.timestamp].sizeInMegabytes += video.sizeInMegabytes
+    }
 
-      videosMap[video.timestamp].videos.push(video)
-    })
-
-    return videosMap
+    videosMap[video.timestamp].videos.push(video)
   })
+
+  return Promise.resolve(videosMap)
+  // })
 }
 
 module.exports = {

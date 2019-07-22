@@ -16,7 +16,7 @@ let bgServer, win
 protocol.registerStandardSchemes(['app'], { secure: true })
 
 function createWindow () {
-  // Create the browser window.
+  // Create the browser windows.
   bgServer = new BrowserWindow({
     show: false,
     webPreferences: {
@@ -31,8 +31,6 @@ function createWindow () {
     }
   })
 
-  bgServer.loadFile(path.resolve(__dirname, '../public/server.html'))
-
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode
     win.loadURL(process.env.WEBPACK_DEV_SERVER_URL)
@@ -44,7 +42,7 @@ function createWindow () {
   }
 
   win.on('closed', () => {
-    bgServer = null
+    // bgServer = null
     win = null
   })
 }
@@ -70,6 +68,10 @@ app.on('activate', () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.on('ready', async () => {
+  // Start express server
+  require('./server/index.js')
+    .startServer()
+
   if (isDevelopment && !process.env.IS_TEST) {
     // Install Vue Devtools
     try {
