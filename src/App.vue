@@ -11,7 +11,7 @@
               class="refresh-btn"
               icon
               v-on="on"
-              @click="getData(tab)"
+              @click="getData(tab, true)"
             >
               <v-icon small>refresh</v-icon>
             </v-btn>
@@ -29,7 +29,7 @@
               <v-icon small>delete_sweep</v-icon>
             </v-btn>
           </template>
-          <span>Delete all {{ currentType }}</span>
+          <span>Delete all {{ currentType }} (except any tagged)</span>
         </v-tooltip>
 
         <v-spacer></v-spacer>
@@ -56,10 +56,11 @@
               color="primary"
               indeterminate />
           </v-layout>
-          <recent-list
+          <video-list
             v-else
+            type="recent"
             :videos="recentVideosData">
-          </recent-list>
+          </video-list>
         </v-tab-item>
 
         <v-tab-item>
@@ -72,10 +73,11 @@
               color="primary"
               indeterminate />
           </v-layout>
-          <recent-list
+          <video-list
             v-else
+            type="saved"
             :videos="savedVideosData">
-          </recent-list>
+          </video-list>
         </v-tab-item>
       </v-tabs>
     </v-navigation-drawer>
@@ -142,13 +144,13 @@
 </template>
 
 <script>
-import RecentList from '@/components/RecentList.vue'
+import VideoList from '@/components/VideoList.vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 
 export default {
   name: 'App',
   components: {
-    RecentList,
+    VideoList,
     VideoPlayer
   },
   data() {
@@ -181,7 +183,7 @@ export default {
     async doSetup() {
       let response
       this.isSettingUp = true
-      this.errors.binaries = this.errors.drive = false
+      this.errors.binaries = false
 
       try {
         response = await this.$http.get('http://localhost:8002/ffbinaries')
@@ -192,29 +194,41 @@ export default {
         return
       }
 
-      try {
-        response = await this.$http.get('http://localhost:8002/teslacam/scandrives')
-        this.teslaCamDir = response.data.dir
-      } catch(e) {
-        console.error(e)
-        this.errors.drive = true
-      }
-
       this.isSettingUp = false
     },
 
-    async getData(tab = 0) {
+    async getData(tab = 0, refresh = false) {
       if (this.isSettingUp)
         return
 
+      this.errors.drive = false
+
+      // Use existing dir if not manually refreshed
+      if (!this.teslaCamDir || refresh) {
+        try {
+          const response = await this.$http.get('http://localhost:8002/teslacam/scandrives')
+          this.teslaCamDir = response.data.dir
+        } catch(e) {
+          console.error(e)
+          this.errors.drive = true
+        }
+      }
+
       const type = tab === 0 ? 'recent' : 'saved'
-      const teslaCamDir = this.teslaCamDir
+      const hasData = tab === 0
+        ? Object.keys(this.recentVideosData).length !== 0
+        : Object.keys(this.savedVideosData).length !== 0
+
+      // Skip retrieving the same list if not manually refreshed
+      if (hasData && !refresh)
+        return
+
       this.isLoading = true
 
       try {
         const response = await this.$http.post(
           'http://localhost:8002/teslacam/data',
-          { paths: { ...this.ffPaths, teslaCamDir }, type }
+          { paths: { ...this.ffPaths, teslaCamDir: this.teslaCamDir }, type }
         )
         if (type === 'recent')
           this.recentVideosData = response.data
