@@ -37,7 +37,9 @@
 
       <v-list-tile-content>
         <v-list-tile-title>{{ formatDate(key) }}</v-list-tile-title>
-        <v-list-tile-sub-title>{{ formatDuration(value.duration) }}, {{ value.sizeInMegabytes }} MB</v-list-tile-sub-title>
+        <v-list-tile-sub-title>
+          <span v-if="value.duration">{{ formatDuration(value.duration) }},</span> {{ value.sizeInMegabytes }} MB
+        </v-list-tile-sub-title>
 
         <v-divider></v-divider>
       </v-list-tile-content>
