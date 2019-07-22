@@ -68,7 +68,7 @@
               <v-flex>
                 <v-slider
                   :value="currentTime.toFixed(4)"
-                  :max="duration"
+                  :max="getMaxDuration()"
                   thumb-size="48"
                   step="0.1"
                   @mousedown="onMouseDown"
@@ -76,7 +76,7 @@
                   @change="onChange"
                 ></v-slider>
               </v-flex>
-              <v-flex shrink><v-chip small>{{ formatDuration(duration) }}</v-chip></v-flex>
+              <v-flex shrink><v-chip small>{{ formatDuration(getMaxDuration()) }}</v-chip></v-flex>
             </v-layout>
           </v-flex>
         </v-layout>
@@ -112,13 +112,6 @@ export default {
   },
 
   computed: {
-    duration() {
-      if (!this.videos.length)
-        return
-
-      return this.videos.find(vid => !vid.error).duration
-    },
-
     videos() {
       return this.$store.state.currentlyPlayingVideos
     },
@@ -148,16 +141,8 @@ export default {
   watch: {
     // videos: {
     //   handler() {
-    //     this.$nextTick(() => {
-    //       console.log(this.$refs)
-
-    //       if (!this.$refs.video)
-    //         return
-
-    //       this.$refs.video[0].addEventListener('ended', () => this.isPlaying = false)
-    //       this.$refs.video[0].addEventListener('pause', () => this.isPlaying = false)
-    //       this.$refs.video[0].addEventListener('play', () => this.isPlaying = true)
-    //       this.$refs.video[0].addEventListener('playing', () => this.isPlaying = true)
+    //     this.videos.forEach(vid => {
+          
     //     })
     //   },
     //   immediate: true,
@@ -172,6 +157,17 @@ export default {
 
     formatDuration(seconds) {
       return format(addSeconds(new Date(null), parseInt(seconds)), 'mm:ss')
+    },
+
+    /**
+     * Some cameras may have more recorded time than others
+     * @todo Make this a property of the instance with a watcher
+     */
+    getMaxDuration() {
+      return this.$refs.video && this.$refs.video.length
+        ? Math.max(...this.$refs.video.map(vid => 
+          (vid.$el && vid.$el.duration) ? vid.$el.duration : 0)
+        ) : 0
     },
 
     getVideoSrc(camera) {
