@@ -5,8 +5,6 @@
       permanent
     >
       <v-toolbar flat dense>
-        <v-spacer></v-spacer>
-
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn
@@ -39,7 +37,6 @@
 
       <v-tabs
         v-model="tab"
-        centered
         @change="onTabChange"
       >
         <v-tab ripple>
@@ -55,8 +52,9 @@
             justify-center
           >
             <v-progress-circular
+              class="progress-loader"
               color="primary"
-              indeterminate/>
+              indeterminate />
           </v-layout>
           <recent-list
             v-else
@@ -70,8 +68,9 @@
             justify-center
           >
             <v-progress-circular
+              class="progress-loader"
               color="primary"
-              indeterminate/>
+              indeterminate />
           </v-layout>
           <recent-list
             v-else
@@ -228,12 +227,16 @@ export default {
     },
 
     onTabChange(tab) {
-      this.getData(tab)
+      setTimeout(() => {
+        this.getData(tab)
+      }, 400)
     }
   },
 }
 </script>
 
 <style>
-
+.progress-loader {
+  margin-top: 20px;
+}
 </style>
