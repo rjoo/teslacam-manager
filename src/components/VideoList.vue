@@ -2,7 +2,7 @@
   <v-list dense two-line>
     <v-list-tile v-if="!hasVideos">
       <v-list-tile-content>
-        <v-list-tile-title>No recent videos</v-list-tile-title>
+        <v-list-tile-title>No {{ type }} videos. Try refreshing to scan again.</v-list-tile-title>
       </v-list-tile-content>
     </v-list-tile>
 
