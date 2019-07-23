@@ -1,6 +1,7 @@
 const drivelist = require('drivelist')
 const fs = require('fs')
 const path = require('path')
+const disk = require('diskusage')
 const ffprobe = require('ffprobe')
 const { downloadBinaries, detectPlatform } = require('ffbinaries')
 const { app } = require('electron')
@@ -61,23 +62,40 @@ const scanDrives = () => {
   return new Promise((resolve, reject) => {
     drivelist.list()
       .then(drives => {
+        let mnt = ''
         let tcamDir = ''
 
         drives.forEach(drive => {
           drive.mountpoints.forEach(mountpoint => {
-            if (fs.existsSync(path.join(mountpoint.path, 'TeslaCam')))
+            if (fs.existsSync(path.join(mountpoint.path, 'TeslaCam'))) {
+              mnt = mountpoint.path
               tcamDir = path.join(mountpoint.path, 'TeslaCam')
+            }
           })
         })
 
         resolve({
           dir: tcamDir,
+          mnt,
           drives
         })
       })
       .catch(err => {
         reject(err)
       })
+  })
+}
+
+/**
+ * Checks free/available space
+ * @param {String} path Path to disk to check
+ * @returns {Promise}
+ */
+const checkDiskUsage = (path) => {
+  return new Promise((resolve, reject) => {
+    disk.check(path)
+      .then(info => resolve(info))
+      .catch(err => reject(err))
   })
 }
 
@@ -167,25 +185,26 @@ const getData = (paths = {}, type = 'recent') => {
   // })
 
   // return Promise.all(probes).then(videos => {
-  videos.forEach(video => {
-    if (!videosMap[video.timestamp]) {
-      videosMap[video.timestamp] = {
-        videos: [],
-        duration: video.duration,
-        sizeInMegabytes: video.sizeInMegabytes
+    videos.forEach(video => {
+      if (!videosMap[video.timestamp]) {
+        videosMap[video.timestamp] = {
+          videos: [],
+          duration: video.duration,
+          sizeInMegabytes: video.sizeInMegabytes
+        }
+      } else {
+        videosMap[video.timestamp].sizeInMegabytes += video.sizeInMegabytes
       }
-    } else {
-      videosMap[video.timestamp].sizeInMegabytes += video.sizeInMegabytes
-    }
 
-    videosMap[video.timestamp].videos.push(video)
-  })
+      videosMap[video.timestamp].videos.push(video)
+    })
 
-  return Promise.resolve(videosMap)
+    return Promise.resolve(videosMap)
   // })
 }
 
 module.exports = {
+  checkDiskUsage,
   isTeslaCamVideoFilepath,
   scanDrives,
   getBinaries,

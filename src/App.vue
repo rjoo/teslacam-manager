@@ -5,6 +5,12 @@
       permanent
     >
       <v-toolbar flat dense>
+        <disk-usage
+          v-if="teslaCamMnt && Object.keys(diskUsageData).length > 0"
+          :info="{ ...diskUsageData, mnt: teslaCamMnt }">
+        </disk-usage>
+        <v-spacer v-else></v-spacer>
+
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn
@@ -31,8 +37,6 @@
           </template>
           <span>Delete all {{ currentType }} (except any tagged)</span>
         </v-tooltip>
-
-        <v-spacer></v-spacer>
       </v-toolbar>
 
       <v-tabs
@@ -139,12 +143,14 @@
 </template>
 
 <script>
+import DiskUsage from '@/components/DiskUsage.vue'
 import VideoList from '@/components/VideoList.vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 
 export default {
   name: 'App',
   components: {
+    DiskUsage,
     VideoList,
     VideoPlayer
   },
@@ -153,9 +159,11 @@ export default {
       isLoading: false,
       isSettingUp: false,
       ffPaths: {},
-      teslaCamDir: '',
+      teslaCamDir: '', // eg. D:/TeslaCam
+      teslaCamMnt: '', // eg. D:/
       recentVideosData: {},
       savedVideosData: {},
+      diskUsageData: {},
       errors: {
         binaries: false,
         drive: false,
@@ -192,6 +200,20 @@ export default {
       this.isSettingUp = false
     },
 
+    async getDiskUsage() {
+      let response
+      try {
+        response = await this.$http.post('http://localhost:8002/teslacam/checkdisk', {
+          path: this.teslaCamMnt
+        })
+
+        this.diskUsageData = response.data
+      } catch (e) {
+        console.error(e)
+        return
+      }
+    },
+
     async getData(tab = 0, refresh = false) {
       if (this.isSettingUp)
         return
@@ -203,6 +225,7 @@ export default {
         try {
           const response = await this.$http.get('http://localhost:8002/teslacam/scandrives')
           this.teslaCamDir = response.data.dir
+          this.teslaCamMnt = response.data.mnt
 
           if (!this.teslaCamDir)
             this.errors.drive = true
@@ -235,15 +258,16 @@ export default {
       } catch(e) {
         console.error(e)
       }
+
       this.isLoading = false
+
+      this.getDiskUsage()
     },
 
     onTabChange(tab) {
-      this.isLoading = true
-
       setTimeout(() => {
         this.getData(tab)
-      }, 400)
+      }, 200)
     }
   },
 }

@@ -1,10 +1,9 @@
 const express = require('express')
 const cors = require('cors')
-const server = express()
 // @todo Will this work on machines with firewalls?
 const port = 8002
 const tcam = require('./teslacam')
-
+const server = express()
 server.use(express.json())
 server.use(cors())
 
@@ -61,6 +60,21 @@ server.get('/teslacam/scandrives', async (req, res) => {
   res.json(tcamDir)
 })
 
+server.post('/teslacam/checkdisk', async (req, res) => {
+  const { path } = req.body
+  let info
+
+  try {
+    info = await tcam.checkDiskUsage(path)
+  } catch (err) {
+    return res.status(500).json({
+      error: err.message
+    })
+  }
+
+  return res.json(info)
+})
+
 /**
  * Retrieves recent or saved teslacam videos
  */
@@ -79,8 +93,4 @@ server.post('/teslacam/data', async (req, res) => {
   res.json(data)
 })
 
-module.exports = {
-  startServer() {
-    server.listen(port)
-  }
-}
+server.listen(port, () => console.log(`Server on process ${process.pid} listening on port ${port}.`))
