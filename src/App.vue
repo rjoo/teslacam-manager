@@ -109,7 +109,8 @@
     <v-dialog
       v-model="errors.binaries"
       max-width="340"
-      persistent>
+      persistent
+    >
       <v-card>
         <v-card-title>There was an error</v-card-title>
         <v-card-text>Unable to download some required binaries for video handling. Check your internet connection and try again.</v-card-text>
@@ -123,20 +124,14 @@
     <v-dialog
       v-model="errors.drive"
       max-width="340"
-      persistent>
+      persistent
+    >
       <v-card>
         <v-card-title>Can't locate USB drive</v-card-title>
         <v-card-text>Unable to detect a drive on your computer that contains the root <em>TeslaCam</em> directory</v-card-text>
         <v-card-actions>
-          <v-form>
-            <v-text-field
-              v-model="teslaCamDir"
-              label="TeslaCam Location"
-              placeholder="E:\TeslaCam"
-              required
-            />
-            <v-btn @click="doSetup">Manually Provide</v-btn>
-          </v-form>
+          <v-spacer></v-spacer>
+          <v-btn @click="getData(tab, true)">Try again</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -208,6 +203,9 @@ export default {
         try {
           const response = await this.$http.get('http://localhost:8002/teslacam/scandrives')
           this.teslaCamDir = response.data.dir
+
+          if (!this.teslaCamDir)
+            this.errors.drive = true
         } catch(e) {
           console.error(e)
           this.errors.drive = true
@@ -241,6 +239,8 @@ export default {
     },
 
     onTabChange(tab) {
+      this.isLoading = true
+
       setTimeout(() => {
         this.getData(tab)
       }, 400)
