@@ -33,7 +33,13 @@
           <v-card class="video-overlay">
             <v-layout column fill-height justify-space-between>
               <v-card-title>
-                <v-chip>{{ cam }}</v-chip>
+                <v-chip
+                  class="camera-label"
+                  color="primary"
+                  small
+                >
+                  <v-icon left>camera_alt</v-icon>{{ cam }}
+                </v-chip>
               </v-card-title>
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -75,6 +81,7 @@
                   step="0.1"
                   @mousedown="onMouseDown"
                   @mouseup="onMouseUp"
+                  @input="onInput"
                   @change="onChange"
                 ></v-slider>
               </v-flex>
@@ -250,11 +257,18 @@ export default {
       this.$refs.videos.forEach(vid => vid.$el.currentTime = +value)
     },
 
+    onInput(value) {
+      if (this.doSeekChange)
+        this.onChange(value)
+    },
+
     onMouseDown() {
+      this.doSeekChange = true
       this.pause()
     },
 
     onMouseUp() {
+      this.doSeekChange = false
       this.play()
     }
   }
@@ -262,6 +276,10 @@ export default {
 </script>
 
 <style>
+.camera-label {
+  opacity: 0.7
+}
+
 .video-holder {
   position: relative;
 }
