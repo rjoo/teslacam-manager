@@ -185,8 +185,8 @@ export default {
 
     fullscreen(camera) {
       const vidEl = this.$refs.videos.find(vid => 
-        vid.$el.classList.contains(`video-${camera}`
-      )).$el
+        vid.$el.classList.contains(`video-${camera}`)
+      ).$el
 
       vidEl.webkitRequestFullscreen()
     },
@@ -217,15 +217,16 @@ export default {
     },
 
     onEnded(e, cam) {
+      // Set pause state only if the camera's video with the max duration has ended
       if (this.maxDurationCam === cam) {
         this.pause()
       }
     },
-
+  
     onLoaded(e, cam) {
-      console.log('loaded')
       const duration = e.target.duration
 
+      // Set the max duration
       if (duration > this.maxDuration) {
         this.maxDuration = duration
         this.maxDurationCam = cam
@@ -233,6 +234,7 @@ export default {
     },
 
     onTimeUpdate(e, cam) {
+      // Track time based on the camera with the max duration
       if (this.maxDurationCam === cam) {
         this.currentTime = e.target.currentTime
       }
