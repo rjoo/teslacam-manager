@@ -13,6 +13,7 @@
       :class="{ 'is-active': current.type === type && current.timestamp === key}"
       active-class="default-class is-active"
       ripple
+      avatar
       @click="onListItemClick(key, value)"
     >
       <!-- <template v-if="value.error">
@@ -40,9 +41,11 @@
         <v-list-tile-sub-title>
           <span v-if="value.duration">{{ formatDuration(value.duration) }},</span> {{ value.sizeInMegabytes }} MB
         </v-list-tile-sub-title>
-
-        <v-divider></v-divider>
       </v-list-tile-content>
+
+      <v-list-tile-avatar v-if="isTagged(key)">
+        <v-icon color="primary" small>bookmark</v-icon>
+      </v-list-tile-avatar>
 
       <v-list-tile-action>
         <v-btn
@@ -114,6 +117,10 @@ export default {
 
     onListItemDeleteClick() {
 
+    },
+
+    isTagged(timestamp) {
+      return this.$store.state.taggedVideos.includes(timestamp)
     }
   }
 }
@@ -121,6 +128,6 @@ export default {
 
 <style>
 .is-active {
-  background: gray;
+  background: darkgray;
 }
 </style>

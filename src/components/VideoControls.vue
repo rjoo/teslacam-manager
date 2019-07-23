@@ -14,11 +14,18 @@
               icon
               large
               v-on="on"
+              @click="isTagged ? untag() : tag()"
             >
-              <v-icon medium>bookmark_border</v-icon>
+              <v-icon
+                :color="isTagged ? 'primary' : 'default'"
+                medium
+              >
+                bookmark_border
+              </v-icon>
             </v-btn>
           </template>
-          <span>Tag this recording</span>
+          <span v-if="isTagged">Untag this recording</span>
+          <span v-else>Tag this recording</span>
         </v-tooltip>
       </v-flex> 
       <v-flex xs3>
@@ -76,10 +83,32 @@
 
 <script>
 export default {
+  computed: {
+    isTagged() {
+      return this.$store.state.taggedVideos.includes(this.timestamp)
+    },
+
+    timestamp() {
+      return this.$store.state.currentlyPlaying
+    }
+  },
+
   props: {
     playing: {
       type: Boolean,
       default: false
+    }
+  },
+
+  methods: {
+    tag() {
+      if (this.timestamp)
+        this.$store.commit('ADD_TAGGED', this.timestamp)
+    },
+
+    untag() {
+      if (this.timestamp)
+        this.$store.commit('REMOVE_TAGGED', this.timestamp)
     }
   }
 }
