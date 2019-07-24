@@ -18,6 +18,12 @@ export default new Vuex.Store({
       state.currentlyPlayingVideos = payload.videos
     },
 
+    'UNSET_CURRENTLY_PLAYING': (state) => {
+      state.currentlyPlaying = ''
+      state.currentlyPlayingType = ''
+      state.currentlyPlayingVideos = []
+    },
+
     'ADD_TAGGED': (state, timestamp) => {
       state.taggedVideos.push(timestamp)
     },

@@ -100,6 +100,25 @@ const checkDiskUsage = (path) => {
 }
 
 /**
+ * Deletes videos
+ * @param {Array} paths Array of paths {String} to delete
+ */
+const deleteVideos = (paths = []) => {
+  if (!paths.length)
+    return Promise.reject(new Error('No video paths provided to delete'))
+
+  for (let i = 0, l = paths.length; i < l; i++) {
+    try {
+      fs.unlinkSync(paths[i])
+    } catch (e) {
+      return Promise.reject(e)
+    }
+  }
+
+  return Promise.resolve()
+}
+
+/**
  * Downloads/adds ffprobe/ffmpeg binaries to user's temp folder
  * Retrieves from cache if already detected
  * @returns {Promise}
@@ -205,6 +224,7 @@ const getData = (paths = {}, type = 'recent') => {
 
 module.exports = {
   checkDiskUsage,
+  deleteVideos,
   isTeslaCamVideoFilepath,
   scanDrives,
   getBinaries,

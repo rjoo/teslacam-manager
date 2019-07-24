@@ -28,8 +28,18 @@
           <span v-else>Tag this recording</span>
         </v-tooltip>
       </v-flex> 
-      <v-flex xs3>
+      <v-flex xs4>
         <v-layout align-center>
+          <v-btn
+            class="control-btn"
+            flat
+            icon
+            large
+            @click="$emit('forward')"
+          >
+            <v-icon medium>skip_previous</v-icon>
+          </v-btn>
+
           <v-btn
             class="control-btn"
             flat
@@ -58,6 +68,16 @@
           >
             <v-icon medium>forward_10</v-icon>
           </v-btn>
+          <v-btn
+            class="control-btn"
+            flat
+            icon
+            large
+            @click="$emit('forward')"
+          >
+            <v-icon medium>skip_next</v-icon>
+          </v-btn>
+          
         </v-layout>
       </v-flex>
 

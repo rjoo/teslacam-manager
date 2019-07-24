@@ -31,12 +31,28 @@
               icon
               v-on="on"
               :disabled="isLoading"
+              @click="confirmDeleteAll = true"
             >
               <v-icon small>delete_sweep</v-icon>
             </v-btn>
           </template>
           <span>Delete all {{ currentType }} (except any tagged)</span>
         </v-tooltip>
+
+        <v-dialog
+          v-model="confirmDeleteAll"
+          max-width="340"
+        >
+          <v-card>
+            <v-card-title>Are you sure?</v-card-title>
+            <v-card-text>Confirm that you want to delete all videos in the {{ currentType === 'recent' ? 'RecentClips' : 'SavedClips' }} folder except for those that were tagged.</v-card-text>
+            <v-card-actions>
+              <v-spacer></v-spacer>
+              <v-btn color="warning" @click.prevent>Delete</v-btn>
+              <v-btn @click="confirmDeleteAll = false">Cancel</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
       </v-toolbar>
 
       <v-tabs
@@ -50,6 +66,7 @@
           Saved / Sentry
         </v-tab>
 
+        <!-- @todo Refactor this into a v-for -->
         <v-tab-item>
           <v-layout
             v-if="isLoading"
@@ -63,7 +80,9 @@
           <video-list
             v-else
             type="recent"
-            :videos="recentVideosData">
+            :disable-item="deletingVideo"
+            :videos="recentVideosData"
+            @delete="onDelete">
           </video-list>
         </v-tab-item>
 
@@ -80,7 +99,9 @@
           <video-list
             v-else
             type="saved"
-            :videos="savedVideosData">
+            :disable-item="deletingVideo"
+            :videos="savedVideosData"
+            @delete="onDelete">
           </video-list>
         </v-tab-item>
       </v-tabs>
@@ -108,7 +129,7 @@
           />
         </v-card-text>
       </v-card>
-    </v-dialog>
+    </v-dialog>    
 
     <v-dialog
       v-model="errors.binaries"
@@ -139,6 +160,16 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <v-dialog
+      v-model="errors.delete"
+      max-width="340"
+    >
+      <v-card>
+        <v-card-title>There was an error</v-card-title>
+        <v-card-text>Unable to delete the video(s). Try again</v-card-text>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
@@ -164,8 +195,11 @@ export default {
       recentVideosData: {},
       savedVideosData: {},
       diskUsageData: {},
+      confirmDeleteAll: false,
+      deletingVideo: '',
       errors: {
         binaries: false,
+        delete: false,
         drive: false,
         data: false
       },
@@ -262,6 +296,41 @@ export default {
       this.isLoading = false
 
       this.getDiskUsage()
+    },
+
+    async onDelete(key, videos) {
+      const shouldUnsetStore = key === this.$store.state.currentlyPlaying
+      this.deletingVideo = key
+
+      try {
+        const response = await this.$http.post(
+          'http://localhost:8002/teslacam/delete',
+          { videos: videos.map(vid => vid.filepath) }
+        )
+
+        if (response.data.success) {
+          if (shouldUnsetStore)
+            this.$store.commit('UNSET_CURRENTLY_PLAYING')
+
+          if (this.currentType === 'recent')
+            this.recentVideosData = {}
+          else if (this.currentType === 'saved')
+            this.savedVideosData = {}
+
+          /** 
+           * Add a slight delay because getData fails in trying to read the files that were just deleted
+           */
+          setTimeout(() => this.getData(), 200)
+        } else {
+          this.errors.delete = true
+        }
+
+      } catch(e) {
+        console.error(e)
+        this.errors.delete = true
+      }
+
+      this.deletingVideo = ''
     },
 
     onTabChange(tab) {

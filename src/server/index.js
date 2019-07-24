@@ -60,6 +60,9 @@ server.get('/teslacam/scandrives', async (req, res) => {
   res.json(tcamDir)
 })
 
+/**
+ * Retrieves disk usage information
+ */
 server.post('/teslacam/checkdisk', async (req, res) => {
   const { path } = req.body
   let info
@@ -91,6 +94,23 @@ server.post('/teslacam/data', async (req, res) => {
   }
 
   res.json(data)
+})
+
+/**
+ * Deletes videos
+ */
+server.post('/teslacam/delete', async (req, res) => {
+  const { videos } = req.body
+
+  try {
+    data = await tcam.deleteVideos(videos)
+  } catch (err) {
+    return res.status(500).json({
+      error: err.message
+    })
+  }
+
+  res.json({ success: true })
 })
 
 server.listen(port, () => console.log(`Server on process ${process.pid} listening on port ${port}.`))

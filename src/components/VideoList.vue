@@ -11,9 +11,10 @@
       v-for="(value, key) in videos"
       :key="key"
       :class="{ 'is-active': current.type === type && current.timestamp === key}"
+      :disabled="disableItem === key"
       active-class="default-class is-active"
-      ripple
       avatar
+      ripple
       @click="onListItemClick(key, value)"
     >
       <!-- <template v-if="value.error">
@@ -51,12 +52,34 @@
         <v-btn
           icon
           ripple
-          @click.stop="onListItemDeleteClick"
+          @click.stop="onListItemDeleteClick(key)"
         >
           <v-icon small>delete</v-icon>
         </v-btn>
       </v-list-tile-action>
     </v-list-tile>
+
+    <v-dialog
+      v-model="confirmDelete"
+      max-width="340"
+    >
+      <v-card>
+        <v-card-title>Are you sure?</v-card-title>
+        <v-card-text>
+          <div>
+            Confirm that you want to delete these videos:
+            <ul>
+              <li v-for="video in videosToDelete.map(vid => vid.filepath)" :key="video">{{ video }}</li>
+            </ul>
+          </div>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="warning" @click="onDeleteConfirm">Delete</v-btn>
+          <v-btn @click="confirmDelete = false">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-list>
 </template>
 
@@ -64,6 +87,14 @@
 import { addSeconds, format } from 'date-fns'
 
 export default {
+  data() {
+    return {
+      confirmDelete: false,
+      videoKeyToDelete: '',
+      videosToDelete: []
+    }
+  },
+
   computed: {
     current() {
       return {
@@ -78,6 +109,11 @@ export default {
   },
 
   props: {
+    disableItem: {
+      type: String,
+      default: ''
+    },
+
     videos: {
       type: Object,
       default() {
@@ -115,8 +151,14 @@ export default {
       )
     },
 
-    onListItemDeleteClick() {
+    onListItemDeleteClick(timestamp) {
+      this.videoKeyToDelete = timestamp
+      this.videosToDelete = this.videos[timestamp].videos
+      this.confirmDelete = true
+    },
 
+    onDeleteConfirm() {
+      this.$emit('delete', this.videoKeyToDelete, this.videosToDelete)
     },
 
     isTagged(timestamp) {
