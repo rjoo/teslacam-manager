@@ -8,14 +8,15 @@
 
     <v-list-tile
       v-else
-      v-for="(value, key) in videos"
-      :key="key"
-      :class="{ 'is-active': current.type === type && current.timestamp === key}"
-      :disabled="disableItem === key"
+      v-for="video in videos"
+      :key="video.id"
+      :class="{ 'is-active': current.type === type && current.id === video.id}"
+      :disabled="disableItem === video.id"
+      :id="video.id"
       active-class="default-class is-active"
       avatar
       ripple
-      @click="onListItemClick(key, value)"
+      @click="onListItemClick(video)"
     >
       <!-- <template v-if="value.error">
         <v-list-tile-avatar>
@@ -38,13 +39,13 @@
       </template> -->
 
       <v-list-tile-content>
-        <v-list-tile-title>{{ formatDate(key) }}</v-list-tile-title>
+        <v-list-tile-title>{{ formatDate(video.timestamp) }}</v-list-tile-title>
         <v-list-tile-sub-title>
-          <span v-if="value.duration">{{ formatDuration(value.duration) }},</span> {{ value.sizeInMegabytes }} MB
+          <span v-if="video.duration">{{ formatDuration(video.duration) }},</span> {{ video.sizeInMegabytes }} MB
         </v-list-tile-sub-title>
       </v-list-tile-content>
 
-      <v-list-tile-avatar v-if="isTagged(key)">
+      <v-list-tile-avatar v-if="isTagged(video.id)">
         <v-icon color="primary" small>bookmark</v-icon>
       </v-list-tile-avatar>
 
@@ -52,7 +53,7 @@
         <v-btn
           icon
           ripple
-          @click.stop="onListItemDeleteClick(key)"
+          @click.stop="onListItemDeleteClick(video)"
         >
           <v-icon small>delete</v-icon>
         </v-btn>
@@ -69,7 +70,7 @@
           <div>
             Confirm that you want to delete these videos:
             <ul>
-              <li v-for="video in videosToDelete.map(vid => vid.filepath)" :key="video">{{ video }}</li>
+              <li v-for="video in videoToDelete.videos.map(vid => vid.filepath)" :key="video">{{ video }}</li>
             </ul>
           </div>
         </v-card-text>
@@ -90,21 +91,28 @@ export default {
   data() {
     return {
       confirmDelete: false,
-      videoKeyToDelete: '',
-      videosToDelete: []
+      videoToDelete: {
+        videos: []
+      }
     }
   },
 
   computed: {
     current() {
-      return {
-        timestamp: this.$store.state.currentlyPlaying,
-        type: this.$store.state.currentlyPlayingType
-      }
+      return this.$store.state.current
     },
 
     hasVideos() {
       return this.videos && Object.keys(this.videos).length
+    }
+  },
+
+  watch: {
+    'current.id': {
+      handler(id) {
+        if (id)
+          this.$vuetify.goTo(`#${id}`, { container: '#nav-drawer', offset: 200 })
+      }
     }
   },
 
@@ -115,17 +123,17 @@ export default {
     },
 
     videos: {
-      type: Object,
+      type: Array,
       default() {
-        return {
+        return [
           /**
-           * '2019-06-03_14-23-03': {
-           *  videos: [],
-           *  duration: '',
-           *  sizeInMegabytes: 0
-           * }
+           * {
+           *    timestamp: '2019-06-03_14-23-03',
+           *    sizeInMegabytes: 0
+           *    videos: []
+           * }, { ... }
            */
-        }
+        ]
       }
     },
 
@@ -144,25 +152,24 @@ export default {
       return format(addSeconds(new Date(null), parseInt(seconds)), 'mm:ss')
     },
 
-    onListItemClick(timestamp, { videos }) {
+    onListItemClick(video) {
       this.$store.commit(
         'SET_CURRENTLY_PLAYING',
-        { type: this.type, timestamp, videos }
+        video
       )
     },
 
-    onListItemDeleteClick(timestamp) {
-      this.videoKeyToDelete = timestamp
-      this.videosToDelete = this.videos[timestamp].videos
+    onListItemDeleteClick(video) {
+      this.videoToDelete = video
       this.confirmDelete = true
     },
 
     onDeleteConfirm() {
-      this.$emit('delete', this.videoKeyToDelete, this.videosToDelete)
+      this.$emit('delete', this.videoToDelete)
     },
 
-    isTagged(timestamp) {
-      return this.$store.state.taggedVideos.includes(timestamp)
+    isTagged(id) {
+      return this.$store.state.taggedVideoIds.includes(id)
     }
   }
 }

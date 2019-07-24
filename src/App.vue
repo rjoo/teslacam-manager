@@ -3,6 +3,7 @@
     <v-navigation-drawer
       app
       permanent
+      id="nav-drawer"
     >
       <v-toolbar flat dense>
         <disk-usage
@@ -108,7 +109,10 @@
     </v-navigation-drawer>
 
     <v-content>
-      <video-player />
+      <video-player
+        @next="onPlayNext"
+        @prev="onPlayPrev"
+      />
     </v-content>
 
     <v-dialog
@@ -180,11 +184,13 @@ import VideoPlayer from '@/components/VideoPlayer.vue'
 
 export default {
   name: 'App',
+
   components: {
     DiskUsage,
     VideoList,
     VideoPlayer
   },
+
   data() {
     return {
       isLoading: false,
@@ -192,8 +198,8 @@ export default {
       ffPaths: {},
       teslaCamDir: '', // eg. D:/TeslaCam
       teslaCamMnt: '', // eg. D:/
-      recentVideosData: {},
-      savedVideosData: {},
+      recentVideosData: [],
+      savedVideosData: [],
       diskUsageData: {},
       confirmDeleteAll: false,
       deletingVideo: '',
@@ -206,16 +212,33 @@ export default {
       tab: null
     }
   },
+
   computed: {
     currentType() {
       return this.tab === 0
         ? 'recent'
         : 'saved';
+    },
+
+    currentVideosData() {
+      return this.tab === 0
+        ? this.recentVideosData
+        : this.savedVideosData;
+    },
+
+    currentIdx() {
+      let currentIdx = this.currentVideosData.findIndex(vid => 
+        vid.id === this.$store.state.current.id
+      )
+
+      return currentIdx
     }
   },
+
   created() {
     this.doSetup().then(this.getData)
   },
+
   methods: {
     async doSetup() {
       let response
@@ -271,8 +294,8 @@ export default {
 
       const type = tab === 0 ? 'recent' : 'saved'
       const hasData = tab === 0
-        ? Object.keys(this.recentVideosData).length !== 0
-        : Object.keys(this.savedVideosData).length !== 0
+        ? this.recentVideosData.length !== 0
+        : this.savedVideosData.length !== 0
 
       // Skip retrieving the same list if not manually refreshed
       if (hasData && !refresh)
@@ -298,14 +321,14 @@ export default {
       this.getDiskUsage()
     },
 
-    async onDelete(key, videos) {
-      const shouldUnsetStore = key === this.$store.state.currentlyPlaying
-      this.deletingVideo = key
+    async onDelete(video) {
+      const shouldUnsetStore = video.id === this.$store.state.current.id
+      this.deletingVideo = video.id
 
       try {
         const response = await this.$http.post(
           'http://localhost:8002/teslacam/delete',
-          { videos: videos.map(vid => vid.filepath) }
+          { videos: video.videos.map(vid => vid.filepath) }
         )
 
         if (response.data.success) {
@@ -313,9 +336,9 @@ export default {
             this.$store.commit('UNSET_CURRENTLY_PLAYING')
 
           if (this.currentType === 'recent')
-            this.recentVideosData = {}
+            this.recentVideosData = []
           else if (this.currentType === 'saved')
-            this.savedVideosData = {}
+            this.savedVideosData = []
 
           /** 
            * Add a slight delay because getData fails in trying to read the files that were just deleted
@@ -331,6 +354,27 @@ export default {
       }
 
       this.deletingVideo = ''
+    },
+
+    onPlayNext() {
+      let idx = this.currentIdx + 1
+
+      if (!this.currentVideosData[idx]) {
+        idx = 0
+      }
+
+      const data = this.currentVideosData[idx]
+      this.$store.commit('SET_CURRENTLY_PLAYING', data)
+    },
+
+    onPlayPrev() {
+      let idx = this.currentIdx - 1
+
+      if (!this.currentVideosData[idx])
+        idx = this.currentVideosData.length - 1
+
+      const data = this.currentVideosData[idx]
+      this.$store.commit('SET_CURRENTLY_PLAYING', data)
     },
 
     onTabChange(tab) {

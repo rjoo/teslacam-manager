@@ -90,25 +90,57 @@
           </v-flex>
         </v-layout>
 
-        <video-controls
-          :playing="isPlaying"
-          @play-pause="playPause"
-          @forward="forward"
-          @rewind="rewind"
-        ></video-controls>
+        <!-- Controls -->
+        <v-container>
+          <v-layout
+            row
+            justify-space-between
+            align-center
+          >
+            <v-flex xs1>
+              <tag-btn></tag-btn>
+            </v-flex> 
+            <v-flex xs4>
+              <v-layout align-center>
+                <play-prev-btn @click="$emit('prev')"></play-prev-btn>
+                <rewind-btn @click="rewind"></rewind-btn>
+                <play-pause-btn :playing="isPlaying" @click="playPause"></play-pause-btn>
+                <forward-btn @click="forward"></forward-btn>
+                <play-next-btn @click="$emit('next')"></play-next-btn>
+                
+              </v-layout>
+            </v-flex>
+
+            <v-flex xs1>
+              <upload-btn></upload-btn>
+            </v-flex> 
+          </v-layout>
+        </v-container>
       </v-flex>
     </template>
   </v-layout>
 </template>
 
 <script>
-import VideoControls from './VideoControls'
+import ForwardBtn from './controls/ForwardBtn'
+import PlayNextBtn from './controls/PlayNextBtn'
+import PlayPauseBtn from './controls/PlayPauseBtn'
+import PlayPrevBtn from './controls/PlayPrevBtn'
+import RewindBtn from './controls/RewindBtn'
+import TagBtn from './controls/TagBtn'
+import UploadBtn from './controls/UploadBtn'
 import VideoElement from './VideoElement'
 import { addSeconds, format } from 'date-fns'
 
 export default {
   components: {
-    VideoControls,
+    ForwardBtn,
+    PlayNextBtn,
+    PlayPauseBtn,
+    PlayPrevBtn,
+    RewindBtn,
+    TagBtn,
+    UploadBtn,
     VideoElement
   },
 
@@ -124,20 +156,20 @@ export default {
 
   computed: {
     videos() {
-      return this.$store.state.currentlyPlayingVideos
+      return this.$store.state.current.videos
     },
 
     videoInfo() {
       return {
-        timestamp: this.$store.state.currentlyPlaying,
-        type: this.$store.state.currentlyPlayingType === 'recent'
+        timestamp: this.$store.state.current.timestamp,
+        type: this.$store.state.current.type === 'recent'
           ? 'Recent Clip'
           : 'Saved Clip'
       }
     },
 
     hasCurrentlyPlaying() {
-      return !!this.$store.state.currentlyPlaying
+      return !!this.$store.state.current.id
     }
   },
 

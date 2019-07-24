@@ -3,6 +3,9 @@ const fs = require('fs')
 const path = require('path')
 const disk = require('diskusage')
 const ffprobe = require('ffprobe')
+const generateId = require('nanoid/generate')
+const Hashids = require('hashids')
+const hashids = new Hashids.default()
 const { downloadBinaries, detectPlatform } = require('ffbinaries')
 const { app } = require('electron')
 
@@ -48,6 +51,18 @@ function getVideosFromPath(dirpath) {
   })
 
   return videos
+}
+
+/**
+ * Hash ID based on timestamp
+ * @param {String} timestamp
+ * @returns {String} id
+ */
+function makeId(timestamp) {
+  let toEncode = timestamp.replace(/(-|:)+/g, ' ')
+  toEncode = toEncode.split(' ')
+
+  return hashids.encode(toEncode)
 }
 
 const isTeslaCamVideoFilepath = (filepath) => {
@@ -187,7 +202,15 @@ const getData = (paths = {}, type = 'recent') => {
     })
   }
 
-  const videosMap = {}
+  const videosOutput = [
+    /**
+     * {
+     *   timestamp: '',
+     *   sizeInMegabytes: 0,
+     *   videos: []
+     * }, { ... }
+     */
+  ]
   // const probes = videos.map(video => {
   //   return new Promise((res) => {
   //     ffprobe(video.filepath, { path: paths.ffprobe })
@@ -205,20 +228,23 @@ const getData = (paths = {}, type = 'recent') => {
 
   // return Promise.all(probes).then(videos => {
     videos.forEach(video => {
-      if (!videosMap[video.timestamp]) {
-        videosMap[video.timestamp] = {
-          videos: [],
-          duration: video.duration,
-          sizeInMegabytes: video.sizeInMegabytes
-        }
-      } else {
-        videosMap[video.timestamp].sizeInMegabytes += video.sizeInMegabytes
-      }
+      const idx = videosOutput.findIndex(vo => vo.timestamp === video.timestamp)
 
-      videosMap[video.timestamp].videos.push(video)
+      if (idx === -1) {
+        videosOutput.push({
+          id: type + makeId(video.timestamp),
+          sizeInMegabytes: video.sizeInMegabytes,
+          timestamp: video.timestamp,
+          type,
+          videos: [video]
+        })
+      } else {
+        videosOutput[idx].videos.push(video)
+        videosOutput[idx].sizeInMegabytes += video.sizeInMegabytes
+      }
     })
 
-    return Promise.resolve(videosMap)
+    return Promise.resolve(videosOutput)
   // })
 }
 
