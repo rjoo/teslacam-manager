@@ -1,5 +1,5 @@
 <template>
-  <v-tooltip right>
+  <v-tooltip top>
     <template v-slot:activator="{ on }">
       <v-btn
         class="control-btn"

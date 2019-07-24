@@ -18,26 +18,6 @@
       ripple
       @click="onListItemClick(video)"
     >
-      <!-- <template v-if="value.error">
-        <v-list-tile-avatar>
-          <v-icon color="error">error</v-icon>
-        </v-list-tile-avatar>
-        <v-list-tile-content>
-          <v-list-tile-title>{{ formatDate(key) }}</v-list-tile-title>
-          <v-list-tile-sub-title>Video is corrupted</v-list-tile-sub-title>
-        </v-list-tile-content>
-      </template>
-
-      <template v-else>
-        <v-list-tile-avatar>
-          <v-icon>play_circle_filled</v-icon>
-        </v-list-tile-avatar>
-        <v-list-tile-content>
-          <v-list-tile-title>{{ formatDate(key) }}</v-list-tile-title>
-          <v-list-tile-sub-title>{{ formatDuration(value.duration) }}, {{ value.sizeInMegabytes }} MB</v-list-tile-sub-title>
-        </v-list-tile-content>
-      </template> -->
-
       <v-list-tile-content>
         <v-list-tile-title>{{ formatDate(video.timestamp) }}</v-list-tile-title>
         <v-list-tile-sub-title>
@@ -76,7 +56,11 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="warning" @click="onDeleteConfirm">Delete</v-btn>
+          <v-btn
+            :disabled="!!disableItem"
+            color="warning"
+            @click="onDeleteConfirm"
+          >Delete</v-btn>
           <v-btn @click="confirmDelete = false">Cancel</v-btn>
         </v-card-actions>
       </v-card>
@@ -110,8 +94,16 @@ export default {
   watch: {
     'current.id': {
       handler(id) {
-        if (id)
-          this.$vuetify.goTo(`#${id}`, { container: '#nav-drawer', offset: 200 })
+        if (!id)
+          return
+
+        const target = document.getElementById(id)
+        const drawer = document.getElementById('nav-drawer')
+        const targetTop = target.offsetTop + 140
+        const viewable = drawer.scrollTop + drawer.offsetHeight
+
+        if (targetTop >= viewable || targetTop < drawer.scrollTop + 60)
+          this.$vuetify.goTo(`#${id}`, { container: '#nav-drawer', offset: 120 })
       }
     }
   },

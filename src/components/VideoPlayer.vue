@@ -1,18 +1,27 @@
 <template>
-  <v-layout wrap>
-    <template v-if="hasCurrentlyPlaying">
+  <v-container class="pa-0" fluid>
+    <v-layout wrap>
       <v-flex
         v-for="cam in ['left', 'front', 'right']"
         :key="cam"
         :class="['video-holder', `video-holder-${cam}`]"
         xs4
       >
-        <v-card
-          v-if="videoCameraHasError(cam)"
-          flat
-        >
-          <v-card-title>Corrupted</v-card-title>
-        </v-card>
+        <div v-if="videoCameraHasError(cam)" class="fill-height video-wrapper video-corrupted-wrapper">
+          <v-card flat class="video-overlay">
+            <v-layout column fill-height justify-space-between>
+              <v-card-title>
+                <v-chip
+                  class="camera-label"
+                  color="error"
+                  small
+                >
+                  <v-icon left>error</v-icon>{{ cam }} corrupted
+                </v-chip>
+              </v-card-title>
+            </v-layout>
+          </v-card>
+        </div>
         <div
           v-else
           :class="['video-wrapper', expandedCamera === cam ? 'expanded' : '']"
@@ -51,74 +60,79 @@
           </v-card>
         </div>
       </v-flex>
+    </v-layout>
 
-      <v-flex class="toolbar" xs12>
-        <v-layout
-          row
-          justify-center
-          wrap
+    <v-layout
+      class="toolbar"
+      row
+      justify-center
+      wrap
+    >
+      <v-flex class="px-4" xs12>
+        <v-card
+          flat
         >
-          <v-flex xs12>
-            <v-card
-              flat
-            >
-              <v-card-title>
-                <div>
-                  <h3>Recorded {{ formatDate(videoInfo.timestamp) }}</h3>
-                  <p>{{ videoInfo.type }}</p>
-                </div>
-              </v-card-title>
-            </v-card>
+          <v-card-title>
+            <div>
+              <h3>Recorded {{ formatDate(videoInfo.timestamp) }}</h3>
+              <p>{{ videoInfo.type }}</p>
+            </div>
+          </v-card-title>
+        </v-card>
+      </v-flex>
+      <v-flex class="px-4" xs12>
+        <v-layout align-center>
+          <v-flex shrink><v-chip small>{{ formatDuration(currentTime) }}</v-chip></v-flex>
+          <v-flex>
+            <v-slider
+              :value="currentTime.toFixed(4)"
+              :max="maxDuration"
+              thumb-size="48"
+              step="0.1"
+              @mousedown="onMouseDown"
+              @mouseup="onMouseUp"
+              @input="onInput"
+              @change="onChange"
+            ></v-slider>
           </v-flex>
-          <v-flex xs12>
-            <v-layout align-center>
-              <v-flex shrink><v-chip small>{{ formatDuration(currentTime) }}</v-chip></v-flex>
-              <v-flex>
-                <v-slider
-                  :value="currentTime.toFixed(4)"
-                  :max="maxDuration"
-                  thumb-size="48"
-                  step="0.1"
-                  @mousedown="onMouseDown"
-                  @mouseup="onMouseUp"
-                  @input="onInput"
-                  @change="onChange"
-                ></v-slider>
-              </v-flex>
-              <v-flex shrink><v-chip small>{{ formatDuration(maxDuration) }}</v-chip></v-flex>
-            </v-layout>
-          </v-flex>
+          <v-flex shrink><v-chip small>{{ formatDuration(maxDuration) }}</v-chip></v-flex>
         </v-layout>
+      </v-flex>
 
+      <v-flex class="pa-0" xs12>
         <!-- Controls -->
-        <v-container>
+        <v-container class="controls" fluid>
           <v-layout
             row
             justify-space-between
             align-center
           >
-            <v-flex xs1>
+            <v-flex xs2>
               <tag-btn></tag-btn>
+              <upload-btn></upload-btn>
             </v-flex> 
             <v-flex xs4>
-              <v-layout align-center>
+              <v-layout align-center justify-center>
                 <play-prev-btn @click="$emit('prev')"></play-prev-btn>
                 <rewind-btn @click="rewind"></rewind-btn>
                 <play-pause-btn :playing="isPlaying" @click="playPause"></play-pause-btn>
                 <forward-btn @click="forward"></forward-btn>
                 <play-next-btn @click="$emit('next')"></play-next-btn>
-                
               </v-layout>
             </v-flex>
 
-            <v-flex xs1>
-              <upload-btn></upload-btn>
+            <v-flex xs2>
+              <v-layout align-center justify-end>
+                <v-btn icon>
+                  <v-icon>settings</v-icon>
+                </v-btn>
+              </v-layout>
             </v-flex> 
           </v-layout>
         </v-container>
       </v-flex>
-    </template>
-  </v-layout>
+    </v-layout>
+  </v-container>
 </template>
 
 <script>
@@ -174,6 +188,7 @@ export default {
   },
 
   mounted() {
+    // When fullscreen is exited, time gets out of sync between the different video elements
     document.addEventListener('webkitfullscreenchange', this.resyncTime)
   },
 
@@ -213,7 +228,7 @@ export default {
     },
 
     getVideoSrc(camera) {
-      const vid = this.videos.find(vid => vid.camera === camera)
+      const vid = this.getVideoData(camera)
       let src;
 
       if (vid && vid.filepath)
@@ -222,11 +237,18 @@ export default {
       return src
     },
 
-    fullscreen(camera) {
-      const vidEl = this.$refs.videos.find(vid => 
+    getVideoData(camera) {
+      return this.videos.find(vid => vid.camera === camera)
+    },
+
+    getVideoElement(camera) {
+      return this.$refs.videos.find(vid => 
         vid.$el.classList.contains(`video-${camera}`)
       ).$el
+    },
 
+    fullscreen(camera) {
+      const vidEl = this.getVideoElement(camera)
       vidEl.webkitRequestFullscreen()
     },
 
@@ -280,11 +302,10 @@ export default {
     },
 
     videoCameraHasError(camera) {
-      const vid = this.videos.find(vid => vid.camera === camera)
-      return vid.error
+      const vid = this.getVideoData(camera)
+      return vid.sizeInMegabytes === 0
     },
 
-    // Refactor to seekbar component
     onChange(value) {
       this.$refs.videos.forEach(vid => vid.$el.currentTime = +value)
     },
@@ -307,9 +328,13 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .camera-label {
   opacity: 0.7
+}
+
+.controls {
+  background: #000;
 }
 
 .video-holder {
@@ -351,9 +376,15 @@ export default {
   transition: all 0.2s ease-out;
 }
 
-.video-wrapper:hover .video-overlay {
+.video-wrapper:hover .video-overlay,
+.video-corrupted-wrapper .video-overlay {
   z-index: 1;
   opacity: 1;
+}
+
+.video-corrupted-wrapper .video-overlay.v-card {
+  background: transparent;
+  cursor: default;
 }
 
 .video-holder-left .video-wrapper {
@@ -372,7 +403,6 @@ export default {
   left: 0;
   z-index: 2;
   width: 100%;
-  padding: 0 20px;
 }
 </style>
 

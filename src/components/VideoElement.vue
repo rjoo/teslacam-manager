@@ -30,13 +30,16 @@ export default {
 
   methods: {
     onEnded(e) {
+      console.log('ended DOM event triggered')
       this.$emit('ended', e)
     },
     onLoaded(e) {
       this.$emit('loaded', e)
     },
     onPause(e) {
-      this.$emit('pause', e)
+      // Don't emit pause when it's because it's ended
+      if (!e.target.ended)
+        this.$emit('pause', e)
     },
     onPlay(e) {
       this.$emit('play', e)
