@@ -46,7 +46,7 @@
         >
           <v-card>
             <v-card-title>Are you sure?</v-card-title>
-            <v-card-text>Confirm that you want to delete all videos in the {{ currentType === 'recent' ? 'RecentClips' : 'SavedClips' }} folder except for those that were tagged.</v-card-text>
+            <v-card-text>Confirm that you want to delete all videos in the <span class="font-weight-medium">{{ currentType === 'recent' ? 'RecentClips' : 'SavedClips' }}</span> folder except for those that were tagged.</v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn color="warning" @click.prevent>Delete</v-btn>
@@ -110,6 +110,7 @@
 
     <v-content>
       <video-player
+        v-if="$store.state.current.id"
         @next="onPlayNext"
         @prev="onPlayPrev"
       />
@@ -271,9 +272,13 @@ export default {
       }
     },
 
-    async getData(tab = 0, refresh = false) {
+    async getData(tab, refresh = false) {
       if (this.isSettingUp)
         return
+
+      tab = typeof tab === 'undefined'
+        ? this.tab
+        : tab
 
       this.errors.drive = false
 
@@ -321,39 +326,48 @@ export default {
       this.getDiskUsage()
     },
 
-    async onDelete(video) {
-      const shouldUnsetStore = video.id === this.$store.state.current.id
+    onDelete(video) {
       this.deletingVideo = video.id
+      let timeout = 0
 
-      try {
-        const response = await this.$http.post(
-          'http://localhost:8002/teslacam/delete',
-          { videos: video.videos.map(vid => vid.filepath) }
-        )
-
-        if (response.data.success) {
-          if (shouldUnsetStore)
-            this.$store.commit('UNSET_CURRENTLY_PLAYING')
-
-          if (this.currentType === 'recent')
-            this.recentVideosData = []
-          else if (this.currentType === 'saved')
-            this.savedVideosData = []
-
-          /** 
-           * Add a slight delay because getData fails in trying to read the files that were just deleted
-           */
-          setTimeout(() => this.getData(), 200)
-        } else {
-          this.errors.delete = true
-        }
-
-      } catch(e) {
-        console.error(e)
-        this.errors.delete = true
+      // If the video being deleted is being actively watched, stop first and wait a bit
+      if (video.id === this.$store.state.current.id) {
+        this.$store.commit('UNSET_CURRENTLY_PLAYING')
+        timeout = 1000
       }
 
-      this.deletingVideo = ''
+      setTimeout(async () => {
+        try {
+          const response = await this.$http.post(
+            'http://localhost:8002/teslacam/delete',
+            { type: video.type, videos: video.videos.map(vid => vid.filepath) }
+          )
+
+          if (response.data.success) {
+            this.$nextTick(() => {
+              if (this.currentType === 'recent')
+                this.recentVideosData = []
+              else if (this.currentType === 'saved')
+                this.savedVideosData = []
+
+              /** 
+               * Add a slight delay because getData fails in trying to read the files that were just deleted
+               */
+              setTimeout(() => this.getData(), 200)
+            })
+          } else {
+            this.errors.delete = true
+          }
+
+          this.deletingVideo = ''
+
+        } catch(e) {
+          console.error(e)
+          this.errors.delete = true
+
+          this.deletingVideo = ''
+        }
+      }, timeout)
     },
 
     onPlayNext() {

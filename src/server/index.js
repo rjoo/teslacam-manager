@@ -1,5 +1,6 @@
 const express = require('express')
 const cors = require('cors')
+const path = require('path')
 // @todo Will this work on machines with firewalls?
 const port = 8002
 const tcam = require('./teslacam')
@@ -100,10 +101,10 @@ server.post('/teslacam/data', async (req, res) => {
  * Deletes videos
  */
 server.post('/teslacam/delete', async (req, res) => {
-  const { videos } = req.body
+  let { type, videos } = req.body
 
   try {
-    data = await tcam.deleteVideos(videos)
+    data = await tcam.deleteVideos(type, videos)
   } catch (err) {
     return res.status(500).json({
       error: err.message

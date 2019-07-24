@@ -2,8 +2,9 @@ const drivelist = require('drivelist')
 const fs = require('fs')
 const path = require('path')
 const disk = require('diskusage')
-const ffprobe = require('ffprobe')
-const generateId = require('nanoid/generate')
+const trash = require('trash')
+// const ffprobe = require('ffprobe')
+// const generateId = require('nanoid/generate')
 const Hashids = require('hashids')
 const hashids = new Hashids.default()
 const { downloadBinaries, detectPlatform } = require('ffbinaries')
@@ -116,21 +117,43 @@ const checkDiskUsage = (path) => {
 
 /**
  * Deletes videos
- * @param {Array} paths Array of paths {String} to delete
+ * @param {Array} paths Array of video filepaths {String} to delete
  */
-const deleteVideos = (paths = []) => {
+const deleteVideos = (type = '', paths = []) => {
   if (!paths.length)
     return Promise.reject(new Error('No video paths provided to delete'))
 
-  for (let i = 0, l = paths.length; i < l; i++) {
-    try {
-      fs.unlinkSync(paths[i])
-    } catch (e) {
-      return Promise.reject(e)
-    }
+  let pathsToRemove
+
+  // When removing saved clips, remove the entire directory
+  if (type === 'saved') {
+    pathsToRemove = paths
+      // Strip out filenames
+      .map(filepath => {
+        const fileparts = filepath.split(path.sep)
+        let glob = fileparts.slice(0, fileparts.length - 1).join(path.sep)
+        glob += path.sep + '**'
+        return glob
+      })
+      // Filter only uniques
+      .filter((filepath, i, arr) => arr.indexOf(filepath) === i)
+  } else {
+    pathsToRemove = paths
   }
 
-  return Promise.resolve()
+  console.log('Moving to trash', pathsToRemove)
+
+  return trash(pathsToRemove, { glob: type === 'saved' })
+  // This permanently deletes from system
+  // @todo Implement this later as a user preference
+  // for (let i = 0, l = paths.length; i < l; i++) {
+  //   try {
+  //     fs.unlinkSync(paths[i])
+  //   } catch (e) {
+  //     return Promise.reject(e)
+  //   }
+  // }
+  // return Promise.resolve()
 }
 
 /**
@@ -187,7 +210,7 @@ const getData = (paths = {}, type = 'recent') => {
   }
 
   if (!fs.existsSync(videosPath))
-    return Promise.resolve({})
+    return Promise.resolve([])
 
   if (type === 'recent') {
     videos = getVideosFromPath(videosPath)
@@ -196,9 +219,12 @@ const getData = (paths = {}, type = 'recent') => {
 
     const savedDirs = fs.readdirSync(videosPath)
     savedDirs.forEach(savedDir => {
-      videos = videos.concat(getVideosFromPath(
-        path.join(videosPath, savedDir)
-      ))
+      let absPath = path.join(videosPath, savedDir)
+
+      if (fs.lstatSync(absPath).isDirectory())
+        videos = videos.concat(
+          getVideosFromPath(absPath)
+        )
     })
   }
 
