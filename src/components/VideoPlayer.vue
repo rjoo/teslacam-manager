@@ -39,7 +39,7 @@
             @play="isPlaying = true"
             @timeupdate="onTimeUpdate($event, cam)" />
   
-          <v-card class="video-overlay">
+          <v-card class="video-overlay" dark>
             <v-layout column fill-height justify-space-between>
               <v-card-title>
                 <v-chip
@@ -52,9 +52,23 @@
               </v-card-title>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn v-if="expandedCamera === cam" icon @click.stop="expandedCamera = null"><v-icon>unfold_less</v-icon></v-btn>
-                <v-btn v-else icon @click.stop="expandedCamera = cam"><v-icon>unfold_more</v-icon></v-btn>
-                <v-btn icon @click.stop="fullscreen(cam)"><v-icon>fullscreen</v-icon></v-btn>
+                <v-btn
+                  v-if="expandedCamera === cam"
+                  icon
+                  small
+                  @click.stop="expandedCamera = null"
+                ><v-icon>unfold_less</v-icon></v-btn>
+                <v-btn
+                  v-else
+                  icon
+                  small
+                  @click.stop="expandedCamera = cam"
+                ><v-icon>unfold_more</v-icon></v-btn>
+                <v-btn
+                  icon
+                  small
+                  @click.stop="fullscreen(cam)"
+                ><v-icon>fullscreen</v-icon></v-btn>
               </v-card-actions>
             </v-layout>
           </v-card>
@@ -64,46 +78,47 @@
 
     <v-layout
       class="toolbar"
-      row
       justify-center
       wrap
     >
-      <v-flex class="px-4" xs12>
+      <!-- Info / Seekbar -->
+      <v-flex class="pa-4" xs12>
         <v-card
+          class="py-3 px-2"
           flat
         >
-          <v-card-title>
-            <div>
-              <h3>Recorded {{ formatDate(videoInfo.timestamp) }}</h3>
-              <p>{{ videoInfo.type }}</p>
-            </div>
-          </v-card-title>
+          <v-list-item>
+            <v-list-item-content>
+              <v-list-item-title class="headline-1">Recorded {{ formatDate(videoInfo.timestamp) }}</v-list-item-title>
+              <v-list-item-subtitle>{{ videoInfo.type }}</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
         </v-card>
       </v-flex>
-      <v-flex class="px-4" xs12>
-        <v-layout align-center>
-          <v-flex shrink><v-chip small>{{ formatDuration(currentTime) }}</v-chip></v-flex>
-          <v-flex>
-            <v-slider
-              :value="currentTime.toFixed(4)"
-              :max="maxDuration"
-              thumb-size="48"
-              step="0.1"
-              @mousedown="onMouseDown"
-              @mouseup="onMouseUp"
-              @input="onInput"
-              @change="onChange"
-            ></v-slider>
-          </v-flex>
-          <v-flex shrink><v-chip small>{{ formatDuration(maxDuration) }}</v-chip></v-flex>
-        </v-layout>
+      <v-flex class="px-4 pt-4" xs12>
+        <v-slider
+          :value="currentTime.toFixed(4)"
+          :max="maxDuration"
+          step="0"
+          @mousedown="onMouseDown"
+          @mouseup="onMouseUp"
+          @input="onInput"
+          @change="onChange"
+        >
+          <template v-slot:prepend>
+            <v-chip small>{{ formatDuration(currentTime) }}</v-chip>
+          </template>
+
+          <template v-slot:append>
+            <v-chip small>{{ formatDuration(maxDuration) }}</v-chip>
+          </template>
+        </v-slider>
       </v-flex>
 
+      <!-- Controls -->
       <v-flex class="pa-0" xs12>
-        <!-- Controls -->
-        <v-container class="controls" fluid>
+        <v-container class="controls px-8 py-6" fluid>
           <v-layout
-            row
             justify-space-between
             align-center
           >
@@ -123,9 +138,11 @@
 
             <v-flex xs2>
               <v-layout align-center justify-end>
-                <v-btn icon @click="$root.$emit('show-settings')">
-                  <v-icon>settings</v-icon>
-                </v-btn>
+                <v-btn
+                  dark
+                  icon
+                  @click="$root.$emit('show-settings')"
+                ><v-icon>settings</v-icon></v-btn>
               </v-layout>
             </v-flex> 
           </v-layout>
@@ -259,10 +276,12 @@ export default {
 
     play() {
       this.$refs.videos.forEach(vid => vid.$el.play())
+      this.isPlaying = true
     },
 
     pause() {
       this.$refs.videos.forEach(vid => vid.$el.pause())
+      this.isPlaying = false
     },
 
     forward() {

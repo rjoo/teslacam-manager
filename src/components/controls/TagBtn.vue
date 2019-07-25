@@ -3,9 +3,8 @@
     <template v-slot:activator="{ on }">
       <v-btn
         class="control-btn"
-        flat
+        dark
         icon
-        large
         v-on="on"
         @click="isTagged ? untag() : tag()"
       >

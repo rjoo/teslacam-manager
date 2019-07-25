@@ -1,8 +1,7 @@
 <template>
   <v-btn
-    flat
+    dark
     icon
-    large
     @click="$emit('click')"
   >
     <v-icon medium>skip_previous</v-icon>

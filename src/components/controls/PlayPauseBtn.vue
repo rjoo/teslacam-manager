@@ -1,8 +1,8 @@
 <template>
   <v-btn
-    flat
+    dark
     icon
-    fab
+    large
     @click="$emit('click')"
   >
     <v-icon v-if="playing" size="52">pause</v-icon>

@@ -1,44 +1,48 @@
 <template>
   <v-list dense two-line>
-    <v-list-tile v-if="!hasVideos">
-      <v-list-tile-content>
-        <v-list-tile-title>No {{ type }} videos. Try refreshing to scan again.</v-list-tile-title>
-      </v-list-tile-content>
-    </v-list-tile>
+    <v-list-item v-if="!hasVideos">
+      <v-list-item-content>
+        <v-list-item-title>No {{ type }} videos. Try refreshing to scan again.</v-list-item-title>
+      </v-list-item-content>
+    </v-list-item>
 
-    <v-list-tile
+    <template
       v-else
-      v-for="video in videos"
-      :key="video.id"
-      :class="{ 'is-active': current.type === type && current.id === video.id}"
-      :disabled="disableItem === video.id"
-      :id="video.id"
-      active-class="default-class is-active"
-      avatar
-      ripple
-      @click="onListItemClick(video)"
+      v-for="(video, i) in videos"
     >
-      <v-list-tile-content>
-        <v-list-tile-title>{{ formatDate(video.timestamp) }}</v-list-tile-title>
-        <v-list-tile-sub-title>
-          <span v-if="video.duration">{{ formatDuration(video.duration) }},</span> {{ video.sizeInMegabytes }} MB
-        </v-list-tile-sub-title>
-      </v-list-tile-content>
+      <v-list-item
+        :key="video.id"
+        :class="{ 'is-active': current.type === type && current.id === video.id}"
+        :disabled="disableItem === video.id"
+        :id="video.id"
+        active-class="default-class is-active"
+        ripple
+        @click="onListItemClick(video)"
+      >
+        <v-list-item-content>
+          <v-list-item-title>{{ formatDate(video.timestamp) }}</v-list-item-title>
+          <v-list-item-subtitle>
+            <span v-if="video.duration">{{ formatDuration(video.duration) }},</span> {{ video.sizeInMegabytes }} MB
+          </v-list-item-subtitle>
+        </v-list-item-content>
 
-      <v-list-tile-avatar v-if="isTagged(video.id)">
-        <v-icon color="primary" small>bookmark</v-icon>
-      </v-list-tile-avatar>
+        <v-list-item-avatar v-if="isTagged(video.id)">
+          <v-icon color="primary" small>bookmark</v-icon>
+        </v-list-item-avatar>
 
-      <v-list-tile-action>
-        <v-btn
-          icon
-          ripple
-          @click.stop="onListItemDeleteClick(video)"
-        >
-          <v-icon small>delete</v-icon>
-        </v-btn>
-      </v-list-tile-action>
-    </v-list-tile>
+        <v-list-item-action>
+          <v-btn
+            icon
+            small
+            ripple
+            @click.stop="onListItemDeleteClick(video)"
+          >
+            <v-icon small>delete</v-icon>
+          </v-btn>
+        </v-list-item-action>
+      </v-list-item>
+      <v-divider :key="i"></v-divider>
+    </template>
 
     <v-dialog
       v-model="confirmDelete"
@@ -71,6 +75,7 @@
 
 <script>
 import { addSeconds, format } from 'date-fns'
+import goTo from 'vuetify/es5/services/goto'
 
 export default {
   data() {
@@ -88,7 +93,7 @@ export default {
     },
 
     hasVideos() {
-      return this.videos && Object.keys(this.videos).length
+      return this.videos.length
     }
   },
 
@@ -99,12 +104,13 @@ export default {
           return
 
         const target = document.getElementById(id)
-        const drawer = document.getElementById('nav-drawer')
+        const drawer = document.querySelector('#nav-drawer > .v-navigation-drawer__content')
         const targetTop = target.offsetTop + 140
         const viewable = drawer.scrollTop + drawer.offsetHeight
 
-        if (targetTop >= viewable || targetTop < drawer.scrollTop + 60)
-          this.$vuetify.goTo(`#${id}`, { container: '#nav-drawer', offset: 120 })
+        if (targetTop >= viewable || targetTop < drawer.scrollTop + 60) {
+          goTo(target, { container: drawer, duration: 300, offset: 120 })
+        }
       }
     }
   },

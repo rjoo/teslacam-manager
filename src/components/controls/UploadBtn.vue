@@ -2,9 +2,8 @@
   <v-tooltip top>
     <template v-slot:activator="{ on }">
       <v-btn
-        flat
+        dark
         icon
-        large
         v-on="on"
         @click="$emit('click')"
       >

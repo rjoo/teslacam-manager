@@ -1,9 +1,10 @@
 <template>
-  <v-app dark>
+  <v-app>
     <v-navigation-drawer
       app
       permanent
       id="nav-drawer"
+      width="300"
     >
       <v-toolbar flat dense>
         <disk-usage
@@ -241,6 +242,8 @@ export default {
   },
 
   created() {
+    this.$vuetify.theme.dark = true
+
     this.doSetup().then(this.getData)
   },
 
