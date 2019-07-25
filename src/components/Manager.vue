@@ -188,7 +188,7 @@ import VideoList from '@/components/VideoList.vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 
 export default {
-  name: 'App',
+  name: 'Manager',
 
   components: {
     AppSettings,

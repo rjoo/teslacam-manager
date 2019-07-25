@@ -29,10 +29,10 @@
         >
           <video-element
             ref="videos"
+            :autoplay="autoplay"
             :camera="cam"
             :class="['video', `video-${cam}`]"
             :src="getVideoSrc(cam)"
-            autoplay
             @ended="onEnded($event, cam)"
             @loaded="onLoaded($event, cam)"
             @pause="isPlaying = false"
@@ -191,7 +191,15 @@ export default {
     } 
   },
 
+  created() {
+    this.isPlaying = this.autoplay
+  },
+
   computed: {
+    autoplay() {
+      return this.$store.state.settings.video.autoplay
+    },
+
     hasCurrentlyPlaying() {
       return !!this.$store.state.current.id
     },
@@ -236,6 +244,8 @@ export default {
   watch: {
     videos: {
       handler() {
+        this.currentTime = 0
+
         this.maxDuration = 0
         this.maxDurationCam = ''
       },
@@ -325,7 +335,11 @@ export default {
     onEnded(e, cam) {
       // Set pause state only if the camera's video with the max duration has ended
       if (this.maxDurationCam === cam) {
-        this.pause()
+        if (this.$store.state.settings.video.autoplayNext) {
+          this.$emit('next')
+        } else {
+          this.pause()
+        }
       }
     },
   

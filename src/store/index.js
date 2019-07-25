@@ -1,9 +1,16 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
+import createPersistedState from 'vuex-persistedstate'
+import deepmerge from 'deepmerge'
+import defaultSettings from './defaultSettings';
 
 Vue.use(Vuex);
 
 export default new Vuex.Store({
+  plugins: [createPersistedState({
+    paths: ['settings', 'taggedVideoIds']
+  })],
+
   state: {
     current: {
       id: '',
@@ -12,6 +19,7 @@ export default new Vuex.Store({
       videos: []
     },
 
+    settings: deepmerge({}, defaultSettings),
     taggedVideoIds: []
   },
 
@@ -55,6 +63,10 @@ export default new Vuex.Store({
 
       if (idx >= 0)
         state.taggedVideoIds.splice(idx)
+    },
+
+    'UPDATE_SETTINGS': (state, payload) => {
+      state.settings = payload
     }
   }
 })

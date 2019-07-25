@@ -9,7 +9,14 @@
         @click="$emit('click')"
       >
         <v-icon
-          :color="isTagged ? 'primary' : 'default'"
+          v-if="isTagged"
+          color="primary"
+          medium
+        >
+          bookmark
+        </v-icon>
+        <v-icon
+          v-else
           medium
         >
           bookmark_border

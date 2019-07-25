@@ -16,8 +16,21 @@ export default {
     }
   },
 
-  created() {
-    this.$vuetify.theme.dark = true
+  computed: {
+    themeDark() {
+      return this.$store.state.settings.themeDark
+    }
+  },
+
+  watch: {
+    themeDark: {
+      handler(themeDark) {
+        this.$nextTick(() => {
+          this.$vuetify.theme.dark = themeDark
+        })
+      },
+      immediate: true
+    }
   },
 
   mounted() {
