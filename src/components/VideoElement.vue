@@ -30,7 +30,6 @@ export default {
 
   methods: {
     onEnded(e) {
-      console.log('ended DOM event triggered')
       this.$emit('ended', e)
     },
     onLoaded(e) {

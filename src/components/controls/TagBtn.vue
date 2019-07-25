@@ -6,7 +6,7 @@
         dark
         icon
         v-on="on"
-        @click="isTagged ? untag() : tag()"
+        @click="$emit('click')"
       >
         <v-icon
           :color="isTagged ? 'primary' : 'default'"
@@ -23,22 +23,10 @@
 
 <script>
 export default {
-  computed: {
-    isTagged() {
-      const id = this.$store.state.current.id
-      return this.$store.state.taggedVideoIds.includes(id)
-    }
-  },
-
-  methods: {
-    tag() {
-      this.$store.commit('ADD_TAGGED_CURRENT')
-      this.$emit('click')
-    },
-
-    untag() {
-      this.$store.commit('REMOVE_TAGGED_CURRENT')
-      this.$emit('click')
+  props: {
+    isTagged: {
+      type: Boolean,
+      default: false
     }
   }
 }

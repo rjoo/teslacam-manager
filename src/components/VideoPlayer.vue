@@ -128,7 +128,7 @@
             align-center
           >
             <v-flex xs2>
-              <tag-btn></tag-btn>
+              <tag-btn :is-tagged="isTagged" @click="isTagged ? onUntag() : onTag()"></tag-btn>
               <upload-btn></upload-btn>
             </v-flex> 
             <v-flex xs4>
@@ -192,6 +192,15 @@ export default {
   },
 
   computed: {
+    hasCurrentlyPlaying() {
+      return !!this.$store.state.current.id
+    },
+
+    isTagged() {
+      const id = this.$store.state.current.id
+      return this.$store.state.taggedVideoIds.includes(id)
+    },
+
     videos() {
       return this.$store.state.current.videos
     },
@@ -204,15 +213,18 @@ export default {
           : 'Saved Clip'
       }
     },
-
-    hasCurrentlyPlaying() {
-      return !!this.$store.state.current.id
-    }
   },
 
   mounted() {
     // When fullscreen is exited, time gets out of sync between the different video elements
     document.addEventListener('webkitfullscreenchange', this.resyncTime)
+
+    this.$root.$on('key-space', this.playPause)
+    this.$root.$on('key-left', this.rewind)
+    this.$root.$on('key-right', this.forward)
+    this.$root.$on('key-ctrl-left', () => { this.$emit('prev') })
+    this.$root.$on('key-ctrl-right', () => { this.$emit('next') })
+    this.$root.$on('key-t', () => { this.isTagged ? this.onUntag() : this.onTag() })
   },
 
   beforeDestroy() {
@@ -332,11 +344,6 @@ export default {
       }
     },
 
-    videoCameraHasError(camera) {
-      const vid = this.getVideoData(camera)
-      return vid.sizeInMegabytes === 0
-    },
-
     onChange(value) {
       this.$refs.videos.forEach(vid => vid.$el.currentTime = +value)
     },
@@ -354,7 +361,20 @@ export default {
     onEndSeek() {
       this.doSeekChange = false
       this.play()
-    }
+    },
+
+    onTag() {
+      this.$store.commit('ADD_TAGGED_CURRENT')
+    },
+
+    onUntag() {
+      this.$store.commit('REMOVE_TAGGED_CURRENT')
+    },
+
+    videoCameraHasError(camera) {
+      const vid = this.getVideoData(camera)
+      return vid.sizeInMegabytes === 0
+    },
   }
 }
 </script>
