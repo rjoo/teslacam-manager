@@ -244,10 +244,14 @@ export default {
   created() {
     this.$vuetify.theme.dark = true
 
-    this.doSetup().then(this.getData)
+    // this.doSetup().then(this.getData)
+    this.getData()
   },
 
   methods: {
+    /**
+     * @todo ffmpeg is not needed right now
+     */
     async doSetup() {
       let response
       this.isSettingUp = true
@@ -279,13 +283,9 @@ export default {
       }
     },
 
-    async getData(tab, refresh = false) {
+    async getData(refresh = false) {
       if (this.isSettingUp)
         return
-
-      tab = typeof tab === 'undefined'
-        ? this.tab
-        : tab
 
       this.errors.drive = false
 
@@ -304,10 +304,8 @@ export default {
         }
       }
 
-      const type = tab === 0 ? 'recent' : 'saved'
-      const hasData = tab === 0
-        ? this.recentVideosData.length !== 0
-        : this.savedVideosData.length !== 0
+      const type = this.currentType
+      const hasData = this.currentVideosData.length
 
       // Skip retrieving the same list if not manually refreshed
       if (hasData && !refresh)
@@ -437,7 +435,7 @@ export default {
 
     onTabChange(tab) {
       setTimeout(() => {
-        this.getData(tab)
+        this.getData()
       }, 200)
     }
   },
