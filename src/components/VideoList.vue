@@ -26,8 +26,8 @@
           </v-list-item-subtitle>
         </v-list-item-content>
 
-        <v-list-item-avatar v-if="isTagged(video.id)">
-          <v-icon color="primary" small>bookmark</v-icon>
+        <v-list-item-avatar>
+          <v-icon v-if="isTagged(video.id)" color="primary" small>bookmark</v-icon>
         </v-list-item-avatar>
 
         <v-list-item-action>

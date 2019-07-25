@@ -47,11 +47,16 @@
                   color="primary"
                   small
                 >
-                  <v-icon left>camera_alt</v-icon>{{ cam }}
+                  <v-icon left small>camera_alt</v-icon>{{ cam }}
                 </v-chip>
               </v-card-title>
               <v-card-actions>
                 <v-spacer></v-spacer>
+                <v-btn
+                  icon
+                  small
+                  @click.stop="openVideoFile(cam)"
+                ><v-icon>open_in_new</v-icon></v-btn>
                 <v-btn
                   v-if="expandedCamera === cam"
                   icon
@@ -100,8 +105,8 @@
           :value="currentTime.toFixed(4)"
           :max="maxDuration"
           step="0"
-          @mousedown="onMouseDown"
-          @mouseup="onMouseUp"
+          @start="onStartSeek"
+          @end="onEndSeek"
           @input="onInput"
           @change="onChange"
         >
@@ -162,6 +167,7 @@ import TagBtn from './controls/TagBtn'
 import UploadBtn from './controls/UploadBtn'
 import VideoElement from './VideoElement'
 import { addSeconds, format } from 'date-fns'
+import { shell } from 'electron'
 
 export default {
   components: {
@@ -269,6 +275,12 @@ export default {
       vidEl.webkitRequestFullscreen()
     },
 
+    openVideoFile(camera) {
+      const vid = this.getVideoData(camera)
+      this.pause()
+      shell.openItem(vid.filepath)
+    },
+
     playPause() {
       const action = this.isPlaying ? 'pause' : 'play'
       this[action]()
@@ -334,12 +346,12 @@ export default {
         this.onChange(value)
     },
 
-    onMouseDown() {
+    onStartSeek() {
       this.doSeekChange = true
       this.pause()
     },
 
-    onMouseUp() {
+    onEndSeek() {
       this.doSeekChange = false
       this.play()
     }
