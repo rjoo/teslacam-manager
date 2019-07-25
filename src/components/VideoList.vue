@@ -1,5 +1,5 @@
 <template>
-  <v-list dense two-line>
+  <v-list dense>
     <v-list-item v-if="!hasVideos">
       <v-list-item-content>
         <v-list-item-title>No {{ type }} videos. Try refreshing to scan again.</v-list-item-title>
@@ -10,9 +10,19 @@
       v-else
       v-for="(video, i) in videos"
     >
+      <v-subheader
+        v-if="(video.groupId && i === 0) || (videos[i - 1] && video.groupId !== videos[i - 1].groupId)"
+        class="pt-2"
+        :key="video.groupId"
+      >
+        <v-icon class="pr-2">folder</v-icon>
+        {{ video.groupId }}
+      </v-subheader>
       <v-list-item
         :key="video.id"
-        :class="{ 'is-active': current.type === type && current.id === video.id}"
+        :class="{
+          'is-active': current.type === type && current.id === video.id
+        }"
         :disabled="disableItem === video.id"
         :id="video.id"
         active-class="default-class is-active"

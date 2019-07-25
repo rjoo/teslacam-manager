@@ -31,9 +31,10 @@ function parseFilename(filename) {
 
 /**
  * @param {String} dirpath Path to directory with videos
+ * @param {Function} cb
  * @returns {Array} videos
  */
-function getVideosFromPath(dirpath) {
+function getVideosFromPath(dirpath, cb) {
   const filenames = fs.readdirSync(dirpath)
   const videos = filenames.map(filename => {
     let { date, timestamp, camera } = parseFilename(filename)
@@ -41,7 +42,7 @@ function getVideosFromPath(dirpath) {
     const stats = fs.statSync(filepath)
     const size = parseInt(stats.size / 1000000)
 
-    return {
+    const vid = {
       camera,
       date,
       filepath,
@@ -49,6 +50,8 @@ function getVideosFromPath(dirpath) {
       timestamp,
       sizeInMegabytes: size
     }
+
+    return cb ? cb(vid) : vid
   })
 
   return videos
@@ -244,7 +247,11 @@ const getData = (paths = {}, type = 'recent') => {
 
       if (fs.lstatSync(absPath).isDirectory())
         videos = videos.concat(
-          getVideosFromPath(absPath)
+          // Add an extra attribute to saved video files for grouping purposes
+          getVideosFromPath(absPath, (vid) => {
+            vid.groupId = savedDir
+            return vid
+          })
         )
     })
   }
@@ -280,6 +287,7 @@ const getData = (paths = {}, type = 'recent') => {
       if (idx === -1) {
         videosOutput.push({
           id: type + makeId(video.timestamp),
+          groupId: video.groupId,
           sizeInMegabytes: video.sizeInMegabytes,
           timestamp: video.timestamp,
           type,
