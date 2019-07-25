@@ -222,9 +222,11 @@ export default {
     this.$root.$on('key-space', this.playPause)
     this.$root.$on('key-left', this.rewind)
     this.$root.$on('key-right', this.forward)
-    this.$root.$on('key-ctrl-left', () => { this.$emit('prev') })
-    this.$root.$on('key-ctrl-right', () => { this.$emit('next') })
-    this.$root.$on('key-t', () => { this.isTagged ? this.onUntag() : this.onTag() })
+    this.$root.$on('key-shift-left', this.rewind.bind(this, 5))
+    this.$root.$on('key-shift-right', this.forward.bind(this, 5))
+    this.$root.$on('key-ctrl-left', () => this.$emit('prev'))
+    this.$root.$on('key-ctrl-right', () => this.$emit('next'))
+    this.$root.$on('key-t', () => this.isTagged ? this.onUntag() : this.onTag())
   },
 
   beforeDestroy() {
@@ -308,12 +310,12 @@ export default {
       this.isPlaying = false
     },
 
-    forward() {
-      this.$refs.videos.forEach(vid => vid.$el.currentTime += 10)
+    forward(t = 10) {
+      this.$refs.videos.forEach(vid => vid.$el.currentTime += t)
     },
 
-    rewind() {
-      this.$refs.videos.forEach(vid => vid.$el.currentTime -= 10)
+    rewind(t = 10) {
+      this.$refs.videos.forEach(vid => vid.$el.currentTime -= t)
     },
 
     resyncTime() {
