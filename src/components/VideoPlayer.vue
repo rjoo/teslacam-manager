@@ -123,7 +123,7 @@
 
             <v-flex xs2>
               <v-layout align-center justify-end>
-                <v-btn icon>
+                <v-btn icon @click="$root.$emit('show-settings')">
                   <v-icon>settings</v-icon>
                 </v-btn>
               </v-layout>

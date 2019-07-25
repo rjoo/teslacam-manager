@@ -123,37 +123,58 @@ const deleteVideos = (type = '', paths = []) => {
   if (!paths.length)
     return Promise.reject(new Error('No video paths provided to delete'))
 
-  let pathsToRemove
+  console.log(`Moving ${paths.length} files to trash`)
 
-  // When removing saved clips, remove the entire directory
-  if (type === 'saved') {
-    pathsToRemove = paths
-      // Strip out filenames
-      .map(filepath => {
-        const fileparts = filepath.split(path.sep)
-        let glob = fileparts.slice(0, fileparts.length - 1).join(path.sep)
-        glob += path.sep + '**'
-        return glob
-      })
-      // Filter only uniques
-      .filter((filepath, i, arr) => arr.indexOf(filepath) === i)
-  } else {
-    pathsToRemove = paths
+  const deletions = []
+  let startIdx = 0
+  while (startIdx < paths.length) {
+    const del = new Promise((resolve, reject) => {
+      let dirs
+      // When removing saved clips, remove the entire directory
+      if (type === 'saved') {
+        dirs = paths.slice(startIdx, startIdx + 199)
+          // Strip out filenames
+          .map(filepath => {
+            const fileparts = filepath.split(path.sep)
+            return fileparts.slice(0, fileparts.length - 1).join(path.sep)
+          })
+          // Filter only uniques
+          .filter((filepath, i, arr) => arr.indexOf(filepath) === i)
+      }
+
+      trash(paths.slice(startIdx, startIdx + 200))
+        .then(() => {
+          if (type !== 'saved')
+            return resolve()
+
+          const dirsToRemove = []
+
+          // Check if the directories are empty now and clean it up if so
+          dirs.forEach(dir => {
+            try {
+              const files = fs.readdirSync(dir)
+
+              if (!files.length)
+                dirsToRemove.push(dir)
+            } catch (e) {}
+          })
+
+          console.log('Removing empty directories', dirsToRemove)
+
+          trash(dirsToRemove)
+            .then(() => resolve())
+            .catch(() => resolve('Failed to remove one or more empty directories'))
+        })
+        .catch((err) => {
+          reject(err)
+        })
+    })
+
+    deletions.push(del)
+    startIdx += 200
   }
 
-  console.log('Moving to trash', pathsToRemove)
-
-  return trash(pathsToRemove, { glob: type === 'saved' })
-  // This permanently deletes from system
-  // @todo Implement this later as a user preference
-  // for (let i = 0, l = paths.length; i < l; i++) {
-  //   try {
-  //     fs.unlinkSync(paths[i])
-  //   } catch (e) {
-  //     return Promise.reject(e)
-  //   }
-  // }
-  // return Promise.resolve()
+  return Promise.all(deletions)
 }
 
 /**

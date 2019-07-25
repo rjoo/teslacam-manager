@@ -43,6 +43,7 @@
     <v-dialog
       v-model="confirmDelete"
       max-width="340"
+      persistent
     >
       <v-card>
         <v-card-title>Are you sure?</v-card-title>

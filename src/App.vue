@@ -49,7 +49,7 @@
             <v-card-text>Confirm that you want to delete all videos in the <span class="font-weight-medium">{{ currentType === 'recent' ? 'RecentClips' : 'SavedClips' }}</span> folder except for those that were tagged.</v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="warning" @click.prevent>Delete</v-btn>
+              <v-btn color="warning" @click.prevent="onDeleteAll">Delete</v-btn>
               <v-btn @click="confirmDeleteAll = false">Cancel</v-btn>
             </v-card-actions>
           </v-card>
@@ -175,10 +175,13 @@
         <v-card-text>Unable to delete the video(s). Try again</v-card-text>
       </v-card>
     </v-dialog>
+    
+    <app-settings></app-settings>
   </v-app>
 </template>
 
 <script>
+import AppSettings from '@/components/AppSettings.vue'
 import DiskUsage from '@/components/DiskUsage.vue'
 import VideoList from '@/components/VideoList.vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
@@ -187,6 +190,7 @@ export default {
   name: 'App',
 
   components: {
+    AppSettings,
     DiskUsage,
     VideoList,
     VideoPlayer
@@ -313,10 +317,13 @@ export default {
           'http://localhost:8002/teslacam/data',
           { paths: { ...this.ffPaths, teslaCamDir: this.teslaCamDir }, type }
         )
-        if (type === 'recent')
+        if (type === 'recent') {
           this.recentVideosData = response.data
-        else if (type === 'saved')
+          this.$store.commit('SET_CURRENTLY_PLAYING', this.recentVideosData[0])
+        } else if (type === 'saved') {
           this.savedVideosData = response.data
+          this.$store.commit('SET_CURRENTLY_PLAYING', this.savedVideosData[0])
+        }
       } catch(e) {
         console.error(e)
       }
@@ -326,6 +333,50 @@ export default {
       this.getDiskUsage()
     },
 
+    postDelete() {
+      if (this.currentType === 'recent')
+        this.recentVideosData = []
+      else if (this.currentType === 'saved')
+        this.savedVideosData = []
+
+      /** 
+       * Add a slight delay because getData fails in trying to read the files that were just deleted
+       */
+      setTimeout(() => this.getData(), 200)
+    },
+
+    async onDeleteAll() {
+      // All videos that are not tagged
+      const videos = [].concat.apply([],
+        this.currentVideosData
+          .filter(vid => !this.$store.state.taggedVideoIds.includes(vid.id))
+          .map(vid => vid.videos)
+        ).map(video => video.filepath)
+
+      this.confirmDeleteAll = false
+      this.isLoading = true
+
+      this.$store.commit('UNSET_CURRENTLY_PLAYING')
+
+      try {
+        const response = await this.$http.post(
+          'http://localhost:8002/teslacam/delete',
+          { type: this.currentType, videos }
+        )
+
+        if (response.data.success) {
+          this.postDelete()
+        } else {
+          this.errors.delete = true
+          this.isLoading = false
+        }
+      } catch (e) {
+        console.error(e)
+        this.errors.delete = true
+        this.isLoading = false
+      }
+    },
+
     onDelete(video) {
       this.deletingVideo = video.id
       let timeout = 0
@@ -333,7 +384,7 @@ export default {
       // If the video being deleted is being actively watched, stop first and wait a bit
       if (video.id === this.$store.state.current.id) {
         this.$store.commit('UNSET_CURRENTLY_PLAYING')
-        timeout = 1000
+        timeout = 200
       }
 
       setTimeout(async () => {
@@ -344,17 +395,7 @@ export default {
           )
 
           if (response.data.success) {
-            this.$nextTick(() => {
-              if (this.currentType === 'recent')
-                this.recentVideosData = []
-              else if (this.currentType === 'saved')
-                this.savedVideosData = []
-
-              /** 
-               * Add a slight delay because getData fails in trying to read the files that were just deleted
-               */
-              setTimeout(() => this.getData(), 200)
-            })
+            this.postDelete()
           } else {
             this.errors.delete = true
           }
