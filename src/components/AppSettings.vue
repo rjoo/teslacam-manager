@@ -15,56 +15,65 @@
         </v-toolbar-items>
       </v-toolbar>
 
-      <v-list three-line subheader>
-        <v-subheader>General</v-subheader>
-        <v-list-item>
-          <v-list-item-action>
-            <v-checkbox v-model="settings.themeDark"></v-checkbox>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Dark theme</v-list-item-title>
-            <v-list-item-subtitle>Switch between dark and light themes</v-list-item-subtitle>
-          </v-list-item-content>
-        </v-list-item>
+      <v-layout>
+        <v-flex xs6 offset-xs1>
+          <v-list three-line subheader>
+            <v-subheader>General</v-subheader>
+            <v-list-item>
+              <v-list-item-action>
+                <v-checkbox v-model="settings.themeDark"></v-checkbox>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title>Dark theme</v-list-item-title>
+                <v-list-item-subtitle>Switch between dark and light themes</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
 
-        <v-list-item>
-          <v-list-item-action>
-            <v-checkbox v-model="settings.trash"></v-checkbox>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Use OS Trash</v-list-item-title>
-            <v-list-item-subtitle>When deleting videos, use Trash for macOS and Recycle Bin for Windows.</v-list-item-subtitle>
+            <v-list-item>
+              <v-list-item-action>
+                <v-checkbox v-model="settings.trash"></v-checkbox>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title>Use OS Trash</v-list-item-title>
+                <v-list-item-subtitle>When deleting videos, use Trash for macOS and Recycle Bin for Windows.</v-list-item-subtitle>
 
-            <v-sheet
-              v-if="!settings.trash"
-              class="pa-2 mt-2 subtitle-2"
-              color="warning"
-              max-width="500"
-            >Videos will be permanently deleted</v-sheet>
-          </v-list-item-content>
-        </v-list-item>
+                <v-sheet
+                  v-if="!settings.trash"
+                  class="pa-2 mt-2 subtitle-2"
+                  color="warning"
+                  max-width="500"
+                >Videos will be permanently deleted</v-sheet>
+              </v-list-item-content>
+            </v-list-item>
 
-        <v-subheader>Video</v-subheader>
-        <v-list-item>
-          <v-list-item-action>
-            <v-checkbox v-model="settings.video.autoplay"></v-checkbox>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Autoplay</v-list-item-title>
-            <v-list-item-subtitle>Autoplay videos when they are loaded</v-list-item-subtitle>
-          </v-list-item-content>
-        </v-list-item>
+            <v-subheader>Video</v-subheader>
+            <v-list-item>
+              <v-list-item-action>
+                <v-checkbox v-model="settings.video.autoplay"></v-checkbox>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title>Autoplay</v-list-item-title>
+                <v-list-item-subtitle>Autoplay videos when they are loaded</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
 
-        <v-list-item>
-          <v-list-item-action>
-            <v-checkbox v-model="settings.video.autoplayNext"></v-checkbox>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Autoplay Next</v-list-item-title>
-            <v-list-item-subtitle>Autoplay the next video in the list when the current video is finished</v-list-item-subtitle>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
+            <v-list-item>
+              <v-list-item-action>
+                <v-checkbox v-model="settings.video.autoplayNext"></v-checkbox>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title>Autoplay Next</v-list-item-title>
+                <v-list-item-subtitle>Autoplay the next video in the list when the current video is finished</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+          </v-list>
+        </v-flex>
+
+        <v-flex xs3>
+          <v-subheader>Shortcuts</v-subheader>
+          <shortcuts-table></shortcuts-table>
+        </v-flex>
+      </v-layout>
     </v-card>
   </v-dialog>
 </template>
@@ -76,10 +85,15 @@
  * @example
  * this.$root.$emit('show-settings')
  */
+import ShortcutsTable from '@/components/ShortcutsTable'
 import defaultSettings from '@/store/defaultSettings'
 import deepmerge from 'deepmerge'
 
 export default {
+  components: {
+    ShortcutsTable
+  },
+
   data() {
     return {
       settings: defaultSettings,

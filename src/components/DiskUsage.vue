@@ -14,7 +14,7 @@
         </v-layout>
       </v-progress-linear>
     </template>
-    <span>{{ convertToGb(info.free) }}GB available on the USB</span>
+    <span>{{ convertToGb(info.free) }}GB available</span>
   </v-tooltip>
 </template>
 
