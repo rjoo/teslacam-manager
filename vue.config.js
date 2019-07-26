@@ -18,7 +18,7 @@ module.exports = {
 
             ],
 
-            mainProcessWatch: ['src/server/index.js', 'src/server/teslacam.js']
+            mainProcessWatch: ['src/server/']
         }
     }
 }

@@ -19,7 +19,7 @@ server.get('/', (req, res) => {
 server.get('/video', (req, res) => {
   let filepath = req.query.filepath
   
-  if (tcam.isTeslaCamVideoFilepath(filepath))
+  if (tcam.isVideoFilepath(filepath))
     res.sendFile(filepath)
   else
     res.status(400).json({
@@ -30,19 +30,19 @@ server.get('/video', (req, res) => {
 /**
  * Downloads or retrieves cached ffmpeg/ffprobe binaries
  */
-server.get('/ffbinaries', async (req, res) => {
-  let paths
+// server.get('/ffbinaries', async (req, res) => {
+//   let paths
 
-  try {
-    paths = await tcam.getBinaries()
-  } catch (err) {
-    return res.status(500).json({
-      error: err.message
-    })
-  }
+//   try {
+//     paths = await tcam.getBinaries()
+//   } catch (err) {
+//     return res.status(500).json({
+//       error: err.message
+//     })
+//   }
 
-  res.json(paths)
-})
+//   res.json(paths)
+// })
 
 /**
  * Scans user's drives to detect teslacam folder
@@ -51,7 +51,7 @@ server.get('/teslacam/scandrives', async (req, res) => {
   let tcamDir
 
   try {
-    tcamDir = await tcam.scanDrives()
+    tcamDir = await tcam.scan()
   } catch (err) {
     return res.status(500).json({
       error: err.message
@@ -64,12 +64,12 @@ server.get('/teslacam/scandrives', async (req, res) => {
 /**
  * Retrieves disk usage information
  */
-server.post('/teslacam/checkdisk', async (req, res) => {
+server.post('/teslacam/checkstorage', async (req, res) => {
   const { path } = req.body
   let info
 
   try {
-    info = await tcam.checkDiskUsage(path)
+    info = await tcam.checkStorage(path)
   } catch (err) {
     return res.status(500).json({
       error: err.message
@@ -101,17 +101,37 @@ server.post('/teslacam/data', async (req, res) => {
  * Deletes videos
  */
 server.post('/teslacam/delete', async (req, res) => {
+  let message
   let { type, videos } = req.body
 
+  if (!videos.length)
+    return res.json()
+
   try {
-    data = await tcam.deleteVideos(type, videos)
+    await tcam.deleteVideos({
+      paths: videos,
+      type,
+    })
   } catch (err) {
+    console.error(err)
     return res.status(500).json({
-      error: err.message
+      error: 'Unable to delete all videos. Some videos may have been deleted.'
     })
   }
 
-  res.json({ success: true })
+  if (type === 'saved') {
+    try {
+      const deletedPaths = await tcam.cleanupSavedDirs(path.dirname(path.resolve(videos[0], '../')))
+
+      console.log(deletedPaths)
+    } catch (err) {
+      console.error(err)
+      message = 'There may be some empty sub-folders in SavedClips'
+    }
+  }
+
+  message = message || ''
+  res.json({ message, success: true })
 })
 
 server.listen(port, () => console.log(`Server on process ${process.pid} listening on port ${port}.`))
