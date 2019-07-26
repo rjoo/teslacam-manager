@@ -2,6 +2,7 @@
   <v-tooltip top>
     <template v-slot:activator="{ on }">
       <v-btn
+        :disabled="disabled"
         dark
         icon
         v-on="on"
@@ -13,3 +14,9 @@
     <span>Upload coming soon</span> 
   </v-tooltip>
 </template>
+
+<script>
+export default {
+  props: ['disabled']
+}
+</script>

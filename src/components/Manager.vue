@@ -129,7 +129,6 @@
 
     <v-content>
       <video-player
-        v-if="$store.state.current.id"
         @next="onPlayNext"
         @prev="onPlayPrev"
       />

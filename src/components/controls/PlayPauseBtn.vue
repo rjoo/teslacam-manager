@@ -1,5 +1,6 @@
 <template>
   <v-btn
+    :disabled="disabled"
     dark
     icon
     large
@@ -13,6 +14,11 @@
 <script>
 export default {
   props: {
+    disabled: {
+      type: Boolean,
+      default: false
+    },
+
     playing: {
       type: Boolean,
       default: false

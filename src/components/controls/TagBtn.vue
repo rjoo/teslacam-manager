@@ -2,6 +2,7 @@
   <v-tooltip top>
     <template v-slot:activator="{ on }">
       <v-btn
+        :disabled="disabled"
         class="control-btn"
         dark
         icon
@@ -31,6 +32,11 @@
 <script>
 export default {
   props: {
+    disabled: {
+      type: Boolean,
+      default: false
+    },
+
     isTagged: {
       type: Boolean,
       default: false

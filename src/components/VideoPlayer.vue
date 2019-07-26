@@ -1,6 +1,6 @@
 <template>
   <v-container class="pa-0" fluid>
-    <v-layout wrap>
+    <v-layout v-if="hasCurrentlyPlaying" wrap>
       <v-flex
         v-for="cam in ['left', 'front', 'right']"
         :key="cam"
@@ -110,15 +110,19 @@
           flat
         >
           <v-list-item>
-            <v-list-item-content>
+            <v-list-item-content v-if="hasCurrentlyPlaying">
               <v-list-item-title class="headline-1">Recorded {{ formatDate(videoInfo.timestamp) }}</v-list-item-title>
               <v-list-item-subtitle>{{ videoInfo.type }}</v-list-item-subtitle>
+            </v-list-item-content>
+            <v-list-item-content v-else>
+              <v-list-item-title class="headline-1">Select a recording</v-list-item-title>
             </v-list-item-content>
           </v-list-item>
         </v-card>
       </v-flex>
       <v-flex class="px-4 pt-4" xs12>
         <v-slider
+          v-if="hasCurrentlyPlaying"
           :value="currentTime.toFixed(4)"
           :max="maxDuration"
           step="0"
@@ -145,16 +149,20 @@
             align-center
           >
             <v-flex xs2>
-              <tag-btn :is-tagged="isTagged" @click="isTagged ? onUntag() : onTag()"></tag-btn>
+              <tag-btn
+                :disabled="!hasCurrentlyPlaying"
+                :is-tagged="isTagged"
+                @click="isTagged ? onUntag() : onTag()"
+              ></tag-btn>
               <upload-btn></upload-btn>
             </v-flex> 
             <v-flex xs4>
               <v-layout align-center justify-center>
-                <play-prev-btn @click="$emit('prev')"></play-prev-btn>
-                <rewind-btn @click="rewind"></rewind-btn>
-                <play-pause-btn :playing="isPlaying" @click="playPause"></play-pause-btn>
-                <forward-btn @click="forward"></forward-btn>
-                <play-next-btn @click="$emit('next')"></play-next-btn>
+                <play-prev-btn :disabled="!hasCurrentlyPlaying" @click="$emit('prev')"></play-prev-btn>
+                <rewind-btn :disabled="!hasCurrentlyPlaying" @click="rewind"></rewind-btn>
+                <play-pause-btn :disabled="!hasCurrentlyPlaying" :playing="isPlaying" @click="playPause"></play-pause-btn>
+                <forward-btn :disabled="!hasCurrentlyPlaying" @click="forward"></forward-btn>
+                <play-next-btn :disabled="!hasCurrentlyPlaying" @click="$emit('next')"></play-next-btn>
               </v-layout>
             </v-flex>
 
