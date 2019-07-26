@@ -29,23 +29,6 @@
               </v-list-item-content>
             </v-list-item>
 
-            <v-list-item>
-              <v-list-item-action>
-                <v-checkbox v-model="settings.trash"></v-checkbox>
-              </v-list-item-action>
-              <v-list-item-content>
-                <v-list-item-title>Use OS Trash</v-list-item-title>
-                <v-list-item-subtitle>When deleting videos, use Trash for macOS and Recycle Bin for Windows.</v-list-item-subtitle>
-
-                <v-sheet
-                  v-if="!settings.trash"
-                  class="pa-2 mt-2 subtitle-2"
-                  color="warning"
-                  max-width="500"
-                >Videos will be permanently deleted</v-sheet>
-              </v-list-item-content>
-            </v-list-item>
-
             <v-subheader>Video</v-subheader>
             <v-list-item>
               <v-list-item-action>

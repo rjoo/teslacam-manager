@@ -4,15 +4,11 @@
       app
       permanent
       id="nav-drawer"
+      class="sidebar"
       width="300"
     >
       <v-toolbar flat dense>
-        <disk-usage
-          v-if="teslaCamMnt && Object.keys(diskUsageData).length > 0"
-          :info="{ ...diskUsageData, mnt: teslaCamMnt }">
-        </disk-usage>
-        <v-spacer v-else></v-spacer>
-
+        <v-spacer></v-spacer>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn
@@ -26,6 +22,21 @@
           </template>
           <span>Refresh list</span>
         </v-tooltip>
+
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn
+              class="refresh-btn"
+              icon
+              v-on="on"
+              @click="openFolder"
+            >
+              <v-icon small>folder_open</v-icon>
+            </v-btn>
+          </template>
+          <span>Open {{ currentTypeFolderName }} folder</span>
+        </v-tooltip>
+
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn
@@ -38,7 +49,7 @@
               <v-icon small>delete_sweep</v-icon>
             </v-btn>
           </template>
-          <span>Delete all {{ currentType }} (except any tagged)</span>
+          <span>Delete all videos in {{ currentTypeFolderName }} (except any tagged)</span>
         </v-tooltip>
 
         <v-dialog
@@ -107,6 +118,13 @@
           </video-list>
         </v-tab-item>
       </v-tabs>
+
+      <v-toolbar dark absolute bottom flat>
+        <disk-usage
+          v-if="teslaCamMnt && Object.keys(diskUsageData).length > 0"
+          :info="{ ...diskUsageData, mnt: teslaCamMnt }">
+        </disk-usage>
+      </v-toolbar>
     </v-navigation-drawer>
 
     <v-content>
@@ -172,8 +190,8 @@
       max-width="340"
     >
       <v-card>
-        <v-card-title>There was an error</v-card-title>
-        <v-card-text>Unable to delete the video(s). Try again</v-card-text>
+        <v-card-title>Oops</v-card-title>
+        <v-card-text>{{ errors.deleteMessage }}</v-card-text>
       </v-card>
     </v-dialog>
     
@@ -186,6 +204,8 @@ import AppSettings from '@/components/AppSettings.vue'
 import DiskUsage from '@/components/DiskUsage.vue'
 import VideoList from '@/components/VideoList.vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
+import path from 'path'
+import { shell } from 'electron'
 
 export default {
   name: 'Manager',
@@ -212,6 +232,7 @@ export default {
       errors: {
         binaries: false,
         delete: false,
+        deleteMessage: '',
         drive: false,
         data: false
       },
@@ -224,6 +245,12 @@ export default {
       return this.tab === 0
         ? 'recent'
         : 'saved';
+    },
+
+    currentTypeFolderName() {
+      return this.tab === 0
+        ? 'RecentClips'
+        : 'SavedClips'
     },
 
     currentVideosData() {
@@ -267,10 +294,10 @@ export default {
       this.isSettingUp = false
     },
 
-    async getDiskUsage() {
+    async getDriveStorage() {
       let response
       try {
-        response = await this.$http.post('http://localhost:8002/teslacam/checkdisk', {
+        response = await this.$http.post('http://localhost:8002/teslacam/checkstorage', {
           path: this.teslaCamMnt
         })
 
@@ -318,18 +345,21 @@ export default {
         )
         if (type === 'recent') {
           this.recentVideosData = response.data
-          this.$store.commit('SET_CURRENTLY_PLAYING', this.recentVideosData[0])
         } else if (type === 'saved') {
           this.savedVideosData = response.data
-          this.$store.commit('SET_CURRENTLY_PLAYING', this.savedVideosData[0])
         }
+
+        if (this.currentVideosData.length) {
+          this.$store.commit('SET_CURRENTLY_PLAYING', this.currentVideosData[0])
+        }
+
       } catch(e) {
         console.error(e)
       }
 
       this.isLoading = false
 
-      this.getDiskUsage()
+      this.getDriveStorage()
     },
 
     postDelete() {
@@ -354,24 +384,36 @@ export default {
 
       this.confirmDeleteAll = false
       this.isLoading = true
+      this.errors.deleteMessage = ''
 
       this.$store.commit('UNSET_CURRENTLY_PLAYING')
 
       try {
         const response = await this.$http.post(
           'http://localhost:8002/teslacam/delete',
-          { type: this.currentType, videos }
+          {
+            useTrash: this.$store.state.settings.trash,
+            type: this.currentType,
+            videos
+          }
         )
 
         if (response.data.success) {
           this.postDelete()
+
+          if (response.data.message) {
+            this.errors.delete = true
+            this.errors.deleteMessage = response.data.message
+          }
         } else {
           this.errors.delete = true
+          this.errors.deleteMessage = 'Something went wrong, try again.'
           this.isLoading = false
         }
       } catch (e) {
         console.error(e)
         this.errors.delete = true
+        this.errors.deleteMessage = e.response.data.error
         this.isLoading = false
       }
     },
@@ -390,7 +432,11 @@ export default {
         try {
           const response = await this.$http.post(
             'http://localhost:8002/teslacam/delete',
-            { type: video.type, videos: video.videos.map(vid => vid.filepath) }
+            { 
+              useTrash: this.$store.state.settings.trash,
+              type: video.type,
+              videos: video.videos.map(vid => vid.filepath)
+            }
           )
 
           if (response.data.success) {
@@ -435,12 +481,25 @@ export default {
       setTimeout(() => {
         this.getData()
       }, 200)
+    },
+
+    openFolder() {
+      shell.openItem(
+        path.join(
+          this.teslaCamDir,
+          this.currentType === 'recent' ? 'RecentClips' : 'SavedClips'
+        )
+      )
     }
   },
 }
 </script>
 
 <style>
+.sidebar .v-navigation-drawer__content {
+  padding-bottom: 80px;
+}
+
 .progress-loader {
   margin-top: 20px;
 }

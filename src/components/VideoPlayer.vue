@@ -7,7 +7,23 @@
         :class="['video-holder', `video-holder-${cam}`]"
         xs4
       >
-        <div v-if="videoCameraHasError(cam)" class="fill-height video-wrapper video-corrupted-wrapper">
+        <div v-if="!videoCameraExists(cam)" class="fill-height video-wrapper video-corrupted-wrapper">
+          <v-card flat class="video-overlay">
+            <v-layout column fill-height justify-space-between>
+              <v-card-title>
+                <v-chip
+                  class="camera-label"
+                  color="error"
+                  small
+                >
+                  <v-icon left>error</v-icon>no {{ cam }} recording
+                </v-chip>
+              </v-card-title>
+            </v-layout>
+          </v-card>
+        </div>
+
+        <div v-else-if="videoCameraHasError(cam)" class="fill-height video-wrapper video-corrupted-wrapper">
           <v-card flat class="video-overlay">
             <v-layout column fill-height justify-space-between>
               <v-card-title>
@@ -22,6 +38,7 @@
             </v-layout>
           </v-card>
         </div>
+
         <div
           v-else
           :class="['video-wrapper', expandedCamera === cam ? 'expanded' : '']"
@@ -385,6 +402,10 @@ export default {
 
     onUntag() {
       this.$store.commit('REMOVE_TAGGED_CURRENT')
+    },
+
+    videoCameraExists(camera) {
+      return !!this.getVideoData(camera)
     },
 
     videoCameraHasError(camera) {
