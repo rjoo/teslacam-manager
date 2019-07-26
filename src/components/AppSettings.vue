@@ -21,11 +21,26 @@
             <v-subheader>General</v-subheader>
             <v-list-item>
               <v-list-item-action>
-                <v-checkbox v-model="settings.themeDark"></v-checkbox>
+                <v-switch v-model="settings.themeDark"></v-switch>
               </v-list-item-action>
               <v-list-item-content>
                 <v-list-item-title>Dark theme</v-list-item-title>
                 <v-list-item-subtitle>Switch between dark and light themes</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+
+            <v-list-item>
+              <v-list-item-content>
+                <v-list-item-title>Default Tab</v-list-item-title>
+                <v-list-item-subtitle>Show Recent or Saved / Sentry by default</v-list-item-subtitle>
+                <v-radio-group v-model="settings.defaultTab">
+                  <v-radio
+                    v-for="tab in tabItems"
+                    :key="tab.value"
+                    :label="tab.label"
+                    :value="tab.value"
+                  ></v-radio>
+                </v-radio-group>
               </v-list-item-content>
             </v-list-item>
 
@@ -80,7 +95,11 @@ export default {
   data() {
     return {
       settings: defaultSettings,
-      showSettings: false
+      showSettings: false,
+      tabItems: [
+        { label: 'Recent', value: 'recent' },
+        { label: 'Saved / Sentry', value: 'saved' }
+      ]
     }
   },
 

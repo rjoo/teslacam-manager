@@ -235,7 +235,7 @@ export default {
         drive: false,
         data: false
       },
-      tab: null
+      tab: this.$store.state.settings.defaultTab === 'recent' ? 0 : 1
     }
   },
 
