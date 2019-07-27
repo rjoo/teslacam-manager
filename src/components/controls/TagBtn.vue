@@ -11,7 +11,7 @@
       >
         <v-icon
           v-if="isTagged"
-          color="primary"
+          color="accent"
           medium
         >
           bookmark

@@ -7,7 +7,7 @@
       class="sidebar"
       width="300"
     >
-      <v-toolbar flat dense>
+      <v-toolbar color="primary" dark flat dense>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
@@ -118,13 +118,15 @@
           </video-list>
         </v-tab-item>
       </v-tabs>
-
-      <v-toolbar dark absolute bottom flat>
-        <disk-usage
-          v-if="teslaCamMnt && Object.keys(diskUsageData).length > 0"
-          :info="{ ...diskUsageData, mnt: teslaCamMnt }">
-        </disk-usage>
-      </v-toolbar>
+      
+      <template v-slot:append>
+        <v-toolbar class="grey darken-4" dark flat>
+          <disk-usage
+            v-if="teslaCamMnt && Object.keys(diskUsageData).length > 0"
+            :info="{ ...diskUsageData, mnt: teslaCamMnt }">
+          </disk-usage>
+        </v-toolbar>
+      </template>
     </v-navigation-drawer>
 
     <v-content>
@@ -495,10 +497,6 @@ export default {
 </script>
 
 <style>
-.sidebar .v-navigation-drawer__content {
-  padding-bottom: 80px;
-}
-
 .progress-loader {
   margin-top: 20px;
 }

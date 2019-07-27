@@ -21,11 +21,11 @@
       <v-list-item
         :key="video.id"
         :class="{
-          'is-active': current.type === type && current.id === video.id
+          'grey darken-2': current.type === type && current.id === video.id
         }"
+        :dark="current.type === type && current.id === video.id"
         :disabled="disableItem === video.id"
         :id="video.id"
-        active-class="default-class is-active"
         ripple
         @click="onListItemClick(video)"
       >
@@ -37,7 +37,7 @@
         </v-list-item-content>
 
         <v-list-item-avatar>
-          <v-icon v-if="isTagged(video.id)" color="primary" small>bookmark</v-icon>
+          <v-icon v-if="isTagged(video.id)" color="accent" small>bookmark</v-icon>
         </v-list-item-avatar>
 
         <v-list-item-action>
@@ -192,7 +192,4 @@ export default {
 </script>
 
 <style>
-.is-active {
-  background: darkgray;
-}
 </style>

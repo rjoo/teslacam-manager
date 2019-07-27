@@ -61,7 +61,7 @@
               <v-card-title>
                 <v-chip
                   class="camera-label"
-                  color="primary"
+                  color="info"
                   small
                 >
                   <v-icon left small>camera_alt</v-icon>{{ cam }}
@@ -259,7 +259,9 @@ export default {
     this.$root.$on('key-shift-right', this.forward.bind(this, 5))
     this.$root.$on('key-ctrl-left', () => this.$emit('prev'))
     this.$root.$on('key-ctrl-right', () => this.$emit('next'))
-    this.$root.$on('key-t', () => this.isTagged ? this.onUntag() : this.onTag())
+    this.$root.$on('key-t', () => {
+      this.isTagged ? this.onUntag() : this.onTag()
+    })
   },
 
   beforeDestroy() {
@@ -405,11 +407,11 @@ export default {
     },
 
     onTag() {
-      this.$store.commit('ADD_TAGGED_CURRENT')
+      this.hasCurrentlyPlaying && this.$store.commit('ADD_TAGGED_CURRENT')
     },
 
     onUntag() {
-      this.$store.commit('REMOVE_TAGGED_CURRENT')
+      this.hasCurrentlyPlaying && this.$store.commit('REMOVE_TAGGED_CURRENT')
     },
 
     videoCameraExists(camera) {
@@ -418,7 +420,7 @@ export default {
 
     videoCameraHasError(camera) {
       const vid = this.getVideoData(camera)
-      return vid.sizeInMegabytes === 0
+      return vid.size === 0
     },
   }
 }

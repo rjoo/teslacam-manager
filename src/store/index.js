@@ -41,18 +41,18 @@ export default new Vuex.Store({
     },
 
     'ADD_TAGGED': (state, id) => {
-      state.taggedVideoIds.push(id)
+      !state.taggedVideoIds.includes(id) && state.taggedVideoIds.push(id)
     },
     
     'REMOVE_TAGGED': (state, id) => {
       const idx = state.taggedVideoIds.indexOf(id)
 
       if (idx >= 0)
-        state.taggedVideoIds.splice(idx)
+        state.taggedVideoIds.splice(idx, 1)
     },
 
     'ADD_TAGGED_CURRENT': (state) => {
-      if (!state.current.id)
+      if (!state.current.id || state.taggedVideoIds.includes(state.current.id))
         return
 
       state.taggedVideoIds.push(state.current.id)
@@ -62,7 +62,7 @@ export default new Vuex.Store({
       const idx = state.taggedVideoIds.indexOf(state.current.id)
 
       if (idx >= 0)
-        state.taggedVideoIds.splice(idx)
+        state.taggedVideoIds.splice(idx, 1)
     },
 
     'UPDATE_SETTINGS': (state, payload) => {

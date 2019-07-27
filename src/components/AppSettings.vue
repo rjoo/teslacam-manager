@@ -16,7 +16,7 @@
       </v-toolbar>
 
       <v-layout>
-        <v-flex xs6 offset-xs1>
+        <v-flex xs4 offset-xs1>
           <v-list three-line subheader>
             <v-subheader>General</v-subheader>
             <v-list-item>
@@ -33,7 +33,8 @@
               <v-list-item-content>
                 <v-list-item-title>Default Tab</v-list-item-title>
                 <v-list-item-subtitle>Show Recent or Saved / Sentry by default</v-list-item-subtitle>
-                <v-radio-group v-model="settings.defaultTab">
+
+                <v-radio-group v-model="settings.defaultTab" class="pl-3">
                   <v-radio
                     v-for="tab in tabItems"
                     :key="tab.value"
@@ -67,7 +68,7 @@
           </v-list>
         </v-flex>
 
-        <v-flex xs3>
+        <v-flex xs3 offset-xs2>
           <v-subheader>Shortcuts</v-subheader>
           <shortcuts-table></shortcuts-table>
         </v-flex>
