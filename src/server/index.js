@@ -98,7 +98,7 @@ server.post('/teslacam/data', async (req, res) => {
 })
 
 /**
- * Deletes videos
+ * Deletes videos and cleans up empty saved directories
  */
 server.post('/teslacam/delete', async (req, res) => {
   let message

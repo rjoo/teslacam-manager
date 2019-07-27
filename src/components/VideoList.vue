@@ -32,7 +32,7 @@
         <v-list-item-content>
           <v-list-item-title>{{ formatDate(video.timestamp) }}</v-list-item-title>
           <v-list-item-subtitle>
-            <span v-if="video.duration">{{ formatDuration(video.duration) }},</span> {{ video.sizeInMegabytes }} MB
+            <span v-if="video.duration">{{ formatDuration(video.duration) }},</span> {{ sizeToMB(video.size) }} MB
           </v-list-item-subtitle>
         </v-list-item-content>
 
@@ -179,6 +179,13 @@ export default {
 
     isTagged(id) {
       return this.$store.state.taggedVideoIds.includes(id)
+    },
+
+    sizeToMB(size) {
+      const rnd = parseInt(size / 1000000)
+      return size > 0 && rnd === 0
+        ? (size / 1000000).toFixed(2)
+        : rnd
     }
   }
 }

@@ -44,7 +44,6 @@ function getVideosFromPath(dirpath, cb) {
     .map(filename => {
       const filepath = `${dirpath}${path.sep}${filename}`
       const stats = fs.statSync(filepath)
-      const size = parseInt(stats.size / 1000000)
       let { date, timestamp, camera } = parseFilename(filename)
 
       const vid = {
@@ -53,7 +52,7 @@ function getVideosFromPath(dirpath, cb) {
         filepath,
         id: filename,
         timestamp,
-        sizeInMegabytes: size
+        size: stats.size
       }
 
       return cb ? cb(vid) : vid
@@ -132,14 +131,14 @@ export const getData = (paths = {}, type = 'recent') => {
       videosOutput.push({
         id: type + makeId(video.timestamp),
         groupId: video.groupId,
-        sizeInMegabytes: video.sizeInMegabytes,
+        size: video.size,
         timestamp: video.timestamp,
         type,
         videos: [video]
       })
     } else {
       videosOutput[idx].videos.push(video)
-      videosOutput[idx].sizeInMegabytes += video.sizeInMegabytes
+      videosOutput[idx].size += video.size
     }
   })
 
