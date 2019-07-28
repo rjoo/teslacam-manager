@@ -30,6 +30,16 @@
             </v-list-item>
 
             <v-list-item>
+              <v-list-item-action>
+                <v-switch v-model="settings.savedFolders"></v-switch>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-list-item-title>SavedClips Folders</v-list-item-title>
+                <v-list-item-subtitle>Enable expandable and collapsible folders view for SavedClips</v-list-item-subtitle>
+              </v-list-item-content>
+            </v-list-item>
+
+            <v-list-item>
               <v-list-item-content>
                 <v-list-item-title>Default Tab</v-list-item-title>
                 <v-list-item-subtitle>Show Recent or Saved / Sentry by default</v-list-item-subtitle>

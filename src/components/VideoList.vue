@@ -1,11 +1,40 @@
 <template>
   <v-list dense>
-    <v-list-item v-if="!hasVideos">
+    <v-list-item
+      v-if="!hasVideos"
+    >
       <v-list-item-content>
         <v-list-item-title>No {{ type }} videos. Try refreshing to scan again.</v-list-item-title>
       </v-list-item-content>
     </v-list-item>
 
+    <!-- Folders View -->
+    <v-list-group
+      v-else-if="type === 'saved' && $store.state.settings.savedFolders"
+      v-for="group in videosByGroup"
+      v-model="group.active"
+      :key="group.groupId"
+      prepend-icon="folder"
+    >
+      <template v-slot:activator>
+        <v-list-item-title>{{ group.groupId }}</v-list-item-title>
+      </template>
+
+      <video-list-item
+        v-for="video in group.list"
+        :key="video.id"
+        :id="video.id"
+        :active="current.type === type && current.id === video.id"
+        :disabled="disableItem === video.id"
+        :tagged="isTagged(video.id)"
+        :title="formatDate(video.timestamp)"
+        :subtitle="`${sizeToMB(video.size)} MB`"
+        @click.native.stop="onListItemClick(video, group)"
+        @delete="onListItemDeleteClick(video)"
+      ></video-list-item>
+    </v-list-group>
+    
+    <!-- Flat View -->
     <template
       v-else
       v-for="(video, i) in videos"
@@ -18,39 +47,19 @@
         <v-icon class="pr-2">folder</v-icon>
         {{ video.groupId }}
       </v-subheader>
-      <v-list-item
-        :key="video.id"
-        :class="{
-          'grey darken-2': current.type === type && current.id === video.id
-        }"
-        :dark="current.type === type && current.id === video.id"
-        :disabled="disableItem === video.id"
-        :id="video.id"
-        ripple
-        @click="onListItemClick(video)"
-      >
-        <v-list-item-content>
-          <v-list-item-title>{{ formatDate(video.timestamp) }}</v-list-item-title>
-          <v-list-item-subtitle>
-            <span v-if="video.duration">{{ formatDuration(video.duration) }},</span> {{ sizeToMB(video.size) }} MB
-          </v-list-item-subtitle>
-        </v-list-item-content>
 
-        <v-list-item-avatar>
-          <v-icon v-if="isTagged(video.id)" color="accent" small>bookmark</v-icon>
-        </v-list-item-avatar>
+      <video-list-item
+       :key="video.id"
+       :id="video.id"
+       :active="current.type === type && current.id === video.id"
+       :disabled="disableItem === video.id"
+       :tagged="isTagged(video.id)"
+       :title="formatDate(video.timestamp)"
+       :subtitle="`${sizeToMB(video.size)} MB`"
+       @click="onListItemClick(video)"
+       @delete="onListItemDeleteClick(video)"
+      ></video-list-item>
 
-        <v-list-item-action>
-          <v-btn
-            icon
-            small
-            ripple
-            @click.stop="onListItemDeleteClick(video)"
-          >
-            <v-icon small>delete</v-icon>
-          </v-btn>
-        </v-list-item-action>
-      </v-list-item>
       <v-divider :key="i"></v-divider>
     </template>
 
@@ -73,7 +82,7 @@
           <v-spacer></v-spacer>
           <v-btn
             :disabled="!!disableItem"
-            color="warning"
+            color="primary"
             @click="onDeleteConfirm"
           >Delete</v-btn>
           <v-btn @click="confirmDelete = false">Cancel</v-btn>
@@ -84,10 +93,15 @@
 </template>
 
 <script>
+import VideoListItem from './VideoListItem';
 import { addSeconds, format } from 'date-fns'
 import goTo from 'vuetify/es5/services/goto'
 
 export default {
+  components: {
+    VideoListItem
+  },
+
   data() {
     return {
       confirmDelete: false,
@@ -104,6 +118,29 @@ export default {
 
     hasVideos() {
       return this.videos.length
+    },
+
+    videosByGroup() {
+      if (this.type !== 'saved' && !this.$store.state.settings.savedFolders)
+        return []
+
+      const byGroup = []
+
+      for (let i = 0, l = this.videos.length; i < l; i++) {
+        const idx = byGroup.findIndex(group => group.groupId === this.videos[i].groupId)
+
+        if (idx === -1) {
+          byGroup.push({
+            active: i === 0,
+            groupId: this.videos[i].groupId,
+            list: [this.videos[i]]
+          })
+        } else {
+          byGroup[idx].list.push(this.videos[i])
+        }
+      }
+
+      return byGroup
     }
   },
 
@@ -113,14 +150,32 @@ export default {
         if (!id)
           return
 
-        const target = document.getElementById(id)
-        const drawer = document.querySelector('#nav-drawer > .v-navigation-drawer__content')
-        const targetTop = target.offsetTop + 140
-        const viewable = drawer.scrollTop + drawer.offsetHeight
+        let timeout = 0
 
-        if (targetTop >= viewable || targetTop < drawer.scrollTop + 60) {
-          goTo(target, { container: drawer, duration: 300, offset: 120 })
+        if (this.type === 'saved') {
+          const group = this.videosByGroup.find(g => g.groupId === this.$store.state.current.groupId) 
+          if (group && !group.active) {
+            this.videosByGroup.forEach(g => g.active = false)
+            group.active = true
+            // Allow time for the collapsing/expanding of a group before scrolling
+            timeout = 400
+          }
         }
+
+        setTimeout(() => {
+          const target = document.getElementById(id)
+          const drawer = document.querySelector('#nav-drawer > .v-navigation-drawer__content')
+
+          if (!target)
+            return
+
+          const targetTop = target.offsetTop + 140
+          const viewable = drawer.scrollTop + drawer.offsetHeight
+
+          if (targetTop >= viewable || targetTop < drawer.scrollTop + 60) {
+            goTo(target, { container: drawer, duration: 300, offset: 120 })
+          }
+        }, timeout)
       }
     }
   },
@@ -161,11 +216,15 @@ export default {
       return format(addSeconds(new Date(null), parseInt(seconds)), 'mm:ss')
     },
 
-    onListItemClick(video) {
+    onListItemClick(video, group) {
       this.$store.commit(
         'SET_CURRENTLY_PLAYING',
         video
       )
+
+      if (group && !group.active) {
+        group.active = true
+      }
     },
 
     onListItemDeleteClick(video) {

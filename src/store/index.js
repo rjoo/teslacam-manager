@@ -14,6 +14,7 @@ export default new Vuex.Store({
   state: {
     current: {
       id: '',
+      groupId: '',
       timestamp: '',
       type: '',
       videos: []
@@ -24,8 +25,9 @@ export default new Vuex.Store({
   },
 
   mutations: {
-    'SET_CURRENTLY_PLAYING': (state, { id, timestamp, type, videos }) => {
+    'SET_CURRENTLY_PLAYING': (state, { id, groupId, timestamp, type, videos }) => {
       state.current.id = id
+      state.current.groupId = groupId || ''
       state.current.timestamp = timestamp
       state.current.type = type
       state.current.videos = videos
@@ -34,6 +36,7 @@ export default new Vuex.Store({
     'UNSET_CURRENTLY_PLAYING': (state) => {
       state.current = {
         id: '',
+        groupId: '',
         timestamp: '',
         type: '',
         videos: []
