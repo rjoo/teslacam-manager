@@ -125,6 +125,9 @@
           v-if="hasCurrentlyPlaying"
           :value="currentTime.toFixed(4)"
           :max="maxDuration"
+          color="blue darken-1"
+          track-color="blue lighten-2"
+          track-fill-color="blue darken-3"
           step="0"
           @start="onStartSeek"
           @end="onEndSeek"
@@ -143,7 +146,7 @@
 
       <!-- Controls -->
       <v-flex class="pa-0" xs12>
-        <v-container class="controls px-8 py-6" fluid>
+        <v-container class="controls px-8 py-4" fluid>
           <v-layout
             justify-space-between
             align-center
