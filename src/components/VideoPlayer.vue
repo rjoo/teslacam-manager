@@ -126,7 +126,7 @@
           :value="currentTime.toFixed(4)"
           :max="maxDuration"
           color="blue darken-1"
-          track-color="blue lighten-2"
+          track-color="grey lighten-2"
           track-fill-color="blue darken-3"
           step="0"
           @start="onStartSeek"
@@ -194,6 +194,7 @@ import RewindBtn from './controls/RewindBtn'
 import TagBtn from './controls/TagBtn'
 import UploadBtn from './controls/UploadBtn'
 import VideoElement from './VideoElement'
+import { getEndpointUrl } from '@/api'
 import { addSeconds, format } from 'date-fns'
 import { shell } from 'electron'
 
@@ -309,7 +310,7 @@ export default {
       let src;
 
       if (vid && vid.filepath)
-        src = `http://localhost:8002/video?filepath=${vid.filepath}`
+        src = getEndpointUrl(`video?filepath=${vid.filepath}`)
 
       return src
     },

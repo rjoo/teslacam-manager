@@ -1,7 +1,8 @@
-const fs = require('fs')
-const path = require('path')
-const Hashids = require('hashids')
-const hashids = new Hashids.default()
+import fs from 'fs'
+import path from 'path'
+import Hashids from 'hashids'
+import log from 'electron-log'
+const hashids = new Hashids()
 
 /**
  * @param {String} filename '2019-06-29_15-29-28-front.mp4'
@@ -121,6 +122,8 @@ export const getData = (paths = {}, type = 'recent') => {
      * }, { ... }
      */
   ]
+
+  log.info(`Found ${videos.length} ${type} videos`)
 
   videos.sort((a, b) => 
     new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()

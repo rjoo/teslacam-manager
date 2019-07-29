@@ -21,7 +21,7 @@ export default new Vuetify({
 
       light: {
         primary: colors.red.darken4,
-        secondary: colors.blue.darken1,
+        secondary: colors.red.darken1,
         accent: colors.blue.accent2,
         warning: colors.orange.darken2,
         info: colors.grey.lighten1
@@ -29,7 +29,7 @@ export default new Vuetify({
 
       dark: {
         primary: colors.blue.darken1,
-        secondary: colors.red.darken2,
+        secondary: colors.blue.lighten2,
         accent: colors.red.lighten1,
         info: colors.grey.darken1
       }

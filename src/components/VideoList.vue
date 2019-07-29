@@ -4,7 +4,7 @@
       v-if="!hasVideos"
     >
       <v-list-item-content>
-        <v-list-item-title>No {{ type }} videos. Try refreshing to scan again.</v-list-item-title>
+        <v-list-item-title>No {{ type }} videos. Refresh to scan again.</v-list-item-title>
       </v-list-item-content>
     </v-list-item>
 

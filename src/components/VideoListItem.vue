@@ -16,7 +16,7 @@
     </v-list-item-content>
 
     <v-list-item-avatar>
-      <v-icon v-if="tagged" color="accent" small>bookmark</v-icon>
+      <v-icon v-if="tagged" color="secondary" small>bookmark</v-icon>
     </v-list-item-avatar>
 
     <v-list-item-action>

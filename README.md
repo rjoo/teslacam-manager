@@ -1,3 +1,1 @@
 # TeslaCam Manager
-
-TODO README

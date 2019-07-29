@@ -7,7 +7,7 @@
       class="sidebar"
       width="300"
     >
-      <v-toolbar color="primary" dark flat dense>
+      <v-toolbar color="grey darken-4" dark flat dense>
         <v-spacer></v-spacer>
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
@@ -61,7 +61,7 @@
             <v-card-text>Confirm that you want to delete all videos in the <span class="font-weight-medium">{{ tabType === 'recent' ? 'RecentClips' : 'SavedClips' }}</span> folder except for those that were tagged.</v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
-              <v-btn color="warning" @click.prevent="onDeleteAll">Delete</v-btn>
+              <v-btn color="primary" @click.prevent="onDeleteAll">Delete</v-btn>
               <v-btn @click="confirmDeleteAll = false">Cancel</v-btn>
             </v-card-actions>
           </v-card>
@@ -120,7 +120,7 @@
       </v-tabs>
       
       <template v-slot:append>
-        <v-toolbar class="grey darken-4" dark flat>
+        <v-toolbar color="grey darken-4" dark flat>
           <disk-usage
             v-if="teslaCamMnt && Object.keys(diskUsageData).length > 0"
             :info="{ ...diskUsageData, mnt: teslaCamMnt }">
@@ -206,6 +206,7 @@ import DiskUsage from '@/components/DiskUsage.vue'
 import VideoList from '@/components/VideoList.vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import path from 'path'
+import { getEndpointUrl } from '@/api'
 import { shell } from 'electron'
 
 export default {
@@ -295,7 +296,7 @@ export default {
       this.errors.binaries = false
 
       try {
-        response = await this.$http.get('http://localhost:8002/ffbinaries')
+        response = await this.$http.get(getEndpointUrl('ffbinaries'))
         this.ffPaths = response.data
       } catch(e) {
         console.error(e)
@@ -309,7 +310,7 @@ export default {
     async getDriveStorage() {
       let response
       try {
-        response = await this.$http.post('http://localhost:8002/teslacam/checkstorage', {
+        response = await this.$http.post(getEndpointUrl('teslacam/checkstorage'), {
           path: this.teslaCamMnt
         })
 
@@ -329,7 +330,7 @@ export default {
       // Use existing dir if not manually refreshed
       if (!this.teslaCamDir || refresh) {
         try {
-          const response = await this.$http.get('http://localhost:8002/teslacam/scandrives')
+          const response = await this.$http.get(getEndpointUrl('teslacam/scandrives'))
           this.teslaCamDir = response.data.dir
           this.teslaCamMnt = response.data.mnt
 
@@ -352,7 +353,7 @@ export default {
 
       try {
         const response = await this.$http.post(
-          'http://localhost:8002/teslacam/data',
+          getEndpointUrl('teslacam/data'),
           { paths: { ...this.ffPaths, teslaCamDir: this.teslaCamDir }, type }
         )
         if (type === 'recent') {
@@ -402,7 +403,7 @@ export default {
 
       try {
         const response = await this.$http.post(
-          'http://localhost:8002/teslacam/delete',
+          getEndpointUrl('teslacam/delete'),
           {
             useTrash: this.$store.state.settings.trash,
             type: this.tabType,
@@ -443,7 +444,7 @@ export default {
       setTimeout(async () => {
         try {
           const response = await this.$http.post(
-            'http://localhost:8002/teslacam/delete',
+            getEndpointUrl('teslacam/delete'),
             { 
               useTrash: this.$store.state.settings.trash,
               type: video.type,

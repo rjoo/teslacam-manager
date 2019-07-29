@@ -1,17 +1,14 @@
 import del from 'del'
 import fs from 'fs'
 import path from 'path'
-import { promisify } from 'util'
+import log from 'electron-log'
 import { isVideoFilepath } from './util'
 
-const pReaddir = promisify(fs.readdir)
 /**
  * Deletes videos
  * @param {Array} obj.paths Array of video filepaths {String} to delete
- * @param {String} obj.type Type of file 'recent' or 'saved'
- * @todo Refactor
  */
-export const deleteVideos = ({ paths = [], type = '' }) => {
+export const deleteVideos = ({ paths = [] }) => {
   // Filter out anything that's not a TeslaCam video file path
   paths = paths.filter(filepath => isVideoFilepath(filepath))
 
@@ -25,7 +22,7 @@ export const deleteVideos = ({ paths = [], type = '' }) => {
   while (startIdx < paths.length) {
     let pathsToRemove = paths.slice(startIdx, startIdx + 200)
 
-    console.log(`Batch deleting ${pathsToRemove.length} files`)
+    log.info(`Batch deleting ${pathsToRemove.length} files`)
     deletions.push(del(pathsToRemove, { force: true }))
     startIdx += 200
   }
@@ -60,10 +57,10 @@ export const cleanupSavedDirs = (savedPath = '') => {
     if (!dirsToRemove.length)
       return Promise.resolve()
 
-    console.log(`Removing ${dirsToRemove.length} directories`)
+    log.info(`Removing ${dirsToRemove.length} directories`)
     return del(dirsToRemove, { force: true })
   } catch (e) {
-    console.error(e)
+    log.error(e.message)
     return Promise.reject(e)
   }
 }

@@ -1,9 +1,9 @@
-const express = require('express')
-const cors = require('cors')
-const path = require('path')
-// @todo Will this work on machines with firewalls?
-const port = 8002
-const tcam = require('./teslacam')
+import express from 'express'
+import cors from 'cors'
+import path from 'path'
+import log from 'electron-log'
+import * as tcam from './teslacam'
+
 const server = express()
 server.use(express.json())
 server.use(cors())
@@ -18,6 +18,8 @@ server.get('/', (req, res) => {
  */
 server.get('/video', (req, res) => {
   let filepath = req.query.filepath
+
+  log.info(`Requested to play ${filepath}`)
   
   if (tcam.isVideoFilepath(filepath))
     res.sendFile(filepath)
@@ -50,6 +52,8 @@ server.get('/video', (req, res) => {
 server.get('/teslacam/scandrives', async (req, res) => {
   let tcamDir
 
+  log.info('Requested to scan drives')
+
   try {
     tcamDir = await tcam.scan()
   } catch (err) {
@@ -67,6 +71,8 @@ server.get('/teslacam/scandrives', async (req, res) => {
 server.post('/teslacam/checkstorage', async (req, res) => {
   const { path } = req.body
   let info
+
+  log.info('Requested to check storage')
 
   try {
     info = await tcam.checkStorage(path)
@@ -86,6 +92,8 @@ server.post('/teslacam/data', async (req, res) => {
   const { paths, type } = req.body
   let data
 
+  log.info('Requested to get video data')
+
   try { 
     data = await tcam.getData(paths, type)
   } catch (err) {
@@ -104,6 +112,8 @@ server.post('/teslacam/delete', async (req, res) => {
   let message
   let { type, videos } = req.body
 
+  log.info('Requested to delete videos', videos)
+
   if (!videos.length)
     return res.json()
 
@@ -113,7 +123,6 @@ server.post('/teslacam/delete', async (req, res) => {
       type,
     })
   } catch (err) {
-    console.error(err)
     return res.status(500).json({
       error: 'Unable to delete all videos. Some videos may have been deleted.'
     })
@@ -121,11 +130,8 @@ server.post('/teslacam/delete', async (req, res) => {
 
   if (type === 'saved') {
     try {
-      const deletedPaths = await tcam.cleanupSavedDirs(path.dirname(path.resolve(videos[0], '../')))
-
-      console.log(deletedPaths)
+      await tcam.cleanupSavedDirs(path.dirname(path.resolve(videos[0], '../')))
     } catch (err) {
-      console.error(err)
       message = 'There may be some empty sub-folders in SavedClips'
     }
   }
@@ -134,4 +140,7 @@ server.post('/teslacam/delete', async (req, res) => {
   res.json({ message, success: true })
 })
 
-server.listen(port, () => console.log(`Server on process ${process.pid} listening on port ${port}.`))
+const listener = server.listen(0, () => {
+  process.env.SERVER_PORT = listener.address().port
+  log.info(`Server on process ${process.pid} listening on port ${process.env.SERVER_PORT}.`)
+})

@@ -1,7 +1,8 @@
-const drivelist = require('drivelist')
-const fs = require('fs')
-const path = require('path')
-const disk = require('diskusage')
+import { list as drivelist } from 'drivelist'
+import fs from 'fs'
+import path from 'path'
+import disk from 'diskusage'
+import log from 'electron-log'
 
 /**
  * Scans user's drives to auto-detect TeslaCam directory
@@ -9,7 +10,7 @@ const disk = require('diskusage')
  */
 export const scan = () => {
   return new Promise((resolve, reject) => {
-    drivelist.list()
+    drivelist()
       .then(drives => {
         let mnt = ''
         let tcamDir = ''
@@ -30,6 +31,7 @@ export const scan = () => {
         })
       })
       .catch(err => {
+        log.error(err.message)
         reject(err)
       })
   })
@@ -44,6 +46,9 @@ export const checkStorage = (mnt) => {
   return new Promise((resolve, reject) => {
     disk.check(mnt)
       .then(info => resolve(info))
-      .catch(err => reject(err))
+      .catch(err => {
+        log.error(err)
+        reject(err)
+      })
   })
 }
