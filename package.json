@@ -1,5 +1,6 @@
 {
   "name": "teslacam-manager",
+  "repository": "github:rjoo/teslacam-manager",
   "version": "0.1.0",
   "private": true,
   "scripts": {
