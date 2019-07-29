@@ -20,7 +20,7 @@ export default new Vuetify({
       // warning: '#FFC107',
 
       light: {
-        primary: colors.red.darken3,
+        primary: colors.red.darken4,
         secondary: colors.blue.darken1,
         accent: colors.blue.accent2,
         warning: colors.orange.darken2,
