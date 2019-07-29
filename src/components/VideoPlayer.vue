@@ -198,6 +198,17 @@ import { getEndpointUrl } from '@/api'
 import { addSeconds, format } from 'date-fns'
 import { shell } from 'electron'
 
+const debounce = (fn, time) => {
+  let timeout;
+
+  return function() {
+    const functionCall = () => fn.apply(this, arguments);
+    
+    clearTimeout(timeout);
+    timeout = setTimeout(functionCall, time);
+  }
+}
+
 export default {
   components: {
     ForwardBtn,
@@ -294,17 +305,6 @@ export default {
       return format(addSeconds(new Date(null), parseInt(seconds)), 'mm:ss')
     },
 
-    /**
-     * Some cameras may have more recorded time than others
-     * @todo Make this a property of the instance with a watcher
-     */
-    getMaxDuration() {
-      return this.$refs.videos && this.$refs.videos.length
-        ? Math.max(...this.$refs.videos.map(vid => 
-          (vid.$el && vid.$el.duration) ? vid.$el.duration : 0)
-        ) : 0
-    },
-
     getVideoSrc(camera) {
       const vid = this.getVideoData(camera)
       let src;
@@ -330,6 +330,9 @@ export default {
       vidEl.webkitRequestFullscreen()
     },
 
+    /**
+     * Opens a video in the OS' default video player
+     */
     openVideoFile(camera) {
       const vid = this.getVideoData(camera)
       this.pause()
@@ -363,11 +366,15 @@ export default {
       this.$refs.videos.forEach(vid => vid.$el.currentTime = this.currentTime)
     },
 
+    playNext: debounce(function() {
+      this.$emit('next')
+    }, 500),
+
     onEnded(e, cam) {
       // Set pause state only if the camera's video with the max duration has ended
       if (this.maxDurationCam === cam) {
         if (this.$store.state.settings.video.autoplayNext) {
-          this.$emit('next')
+          this.playNext()
         } else {
           this.pause()
         }

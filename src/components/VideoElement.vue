@@ -36,7 +36,7 @@ export default {
       this.$emit('loaded', e)
     },
     onPause(e) {
-      // Don't emit pause when it's because it's ended
+      // Don't emit pause when it's ended
       if (!e.target.ended)
         this.$emit('pause', e)
     },
@@ -49,4 +49,3 @@ export default {
   }
 }
 </script>
-
