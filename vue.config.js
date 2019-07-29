@@ -17,7 +17,8 @@ module.exports = {
                 appId: "com.tcmanager.app",
                 win: {
                     target: ["portable"]
-                }
+                },
+                productName: 'TeslaCam Manager'
             },
 
             files: [
