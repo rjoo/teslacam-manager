@@ -34,7 +34,7 @@
               <v-icon small>folder_open</v-icon>
             </v-btn>
           </template>
-          <span>Open {{ currentTypeFolderName }} folder</span>
+          <span>Open {{ tabTypeFolderName }} folder</span>
         </v-tooltip>
 
         <v-tooltip bottom>
@@ -49,7 +49,7 @@
               <v-icon small>delete_sweep</v-icon>
             </v-btn>
           </template>
-          <span>Delete all videos in {{ currentTypeFolderName }} (except any tagged)</span>
+          <span>Delete all videos in {{ tabTypeFolderName }} (except any tagged)</span>
         </v-tooltip>
 
         <v-dialog
@@ -58,7 +58,7 @@
         >
           <v-card>
             <v-card-title>Are you sure?</v-card-title>
-            <v-card-text>Confirm that you want to delete all videos in the <span class="font-weight-medium">{{ currentType === 'recent' ? 'RecentClips' : 'SavedClips' }}</span> folder except for those that were tagged.</v-card-text>
+            <v-card-text>Confirm that you want to delete all videos in the <span class="font-weight-medium">{{ tabType === 'recent' ? 'RecentClips' : 'SavedClips' }}</span> folder except for those that were tagged.</v-card-text>
             <v-card-actions>
               <v-spacer></v-spacer>
               <v-btn color="warning" @click.prevent="onDeleteAll">Delete</v-btn>
@@ -242,30 +242,41 @@ export default {
   },
 
   computed: {
-    currentType() {
+    tabType() {
       return this.tab === 0
         ? 'recent'
         : 'saved';
     },
 
-    currentTypeFolderName() {
+    tabTypeFolderName() {
       return this.tab === 0
         ? 'RecentClips'
         : 'SavedClips'
     },
 
-    currentVideosData() {
+    currentTabVideosData() {
       return this.tab === 0
         ? this.recentVideosData
         : this.savedVideosData;
     },
 
-    currentIdx() {
-      let currentIdx = this.currentVideosData.findIndex(vid => 
+    currentlyPlayingVideosData() {
+      const type = this.$store.state.current.type
+
+      if (type === 'recent')
+        return this.recentVideosData
+      else if (type === 'saved')
+        return this.savedVideosData
+
+      return []
+    },
+
+    currentlyPlayingIdx() {
+      let idx = this.currentlyPlayingVideosData.findIndex(vid => 
         vid.id === this.$store.state.current.id
       )
 
-      return currentIdx
+      return idx
     }
   },
 
@@ -330,8 +341,8 @@ export default {
         }
       }
 
-      const type = this.currentType
-      const hasData = this.currentVideosData.length
+      const type = this.tabType
+      const hasData = this.currentTabVideosData.length
 
       // Skip retrieving the same list if not manually refreshed
       if (hasData && !refresh)
@@ -350,8 +361,8 @@ export default {
           this.savedVideosData = response.data
         }
 
-        if (this.currentVideosData.length) {
-          this.$store.commit('SET_CURRENTLY_PLAYING', this.currentVideosData[0])
+        if (this.currentTabVideosData.length) {
+          this.$store.commit('SET_CURRENTLY_PLAYING', this.currentTabVideosData[0])
         }
 
       } catch(e) {
@@ -364,9 +375,9 @@ export default {
     },
 
     postDelete() {
-      if (this.currentType === 'recent')
+      if (this.tabType === 'recent')
         this.recentVideosData = []
-      else if (this.currentType === 'saved')
+      else if (this.tabType === 'saved')
         this.savedVideosData = []
 
       /** 
@@ -378,7 +389,7 @@ export default {
     async onDeleteAll() {
       // All videos that are not tagged
       const videos = [].concat.apply([],
-        this.currentVideosData
+        this.currentTabVideosData
           .filter(vid => !this.$store.state.taggedVideoIds.includes(vid.id))
           .map(vid => vid.videos)
         ).map(video => video.filepath)
@@ -394,7 +405,7 @@ export default {
           'http://localhost:8002/teslacam/delete',
           {
             useTrash: this.$store.state.settings.trash,
-            type: this.currentType,
+            type: this.tabType,
             videos
           }
         )
@@ -458,24 +469,24 @@ export default {
     },
 
     onPlayNext() {
-      let idx = this.currentIdx + 1
+      let idx = this.currentlyPlayingIdx + 1
 
-      if (!this.currentVideosData[idx]) {
+      if (!this.currentlyPlayingVideosData[idx]) {
         idx = 0
       }
 
-      const data = this.currentVideosData[idx]
-      this.$store.commit('SET_CURRENTLY_PLAYING', data)
+      const data = this.currentlyPlayingVideosData[idx]
+      data && this.$store.commit('SET_CURRENTLY_PLAYING', data)
     },
 
     onPlayPrev() {
-      let idx = this.currentIdx - 1
+      let idx = this.currentlyPlayingIdx - 1
 
-      if (!this.currentVideosData[idx])
-        idx = this.currentVideosData.length - 1
+      if (!this.currentlyPlayingVideosData[idx])
+        idx = this.currentlyPlayingVideosData.length - 1
 
-      const data = this.currentVideosData[idx]
-      this.$store.commit('SET_CURRENTLY_PLAYING', data)
+      const data = this.currentlyPlayingVideosData[idx]
+      data && this.$store.commit('SET_CURRENTLY_PLAYING', data)
     },
 
     onTabChange() {
@@ -488,7 +499,7 @@ export default {
       shell.openItem(
         path.join(
           this.teslaCamDir,
-          this.currentType === 'recent' ? 'RecentClips' : 'SavedClips'
+          this.tabType === 'recent' ? 'RecentClips' : 'SavedClips'
         )
       )
     }
