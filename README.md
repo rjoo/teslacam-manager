@@ -1,5 +1,6 @@
 # TeslaCam Manager
 Quickly and easily skim through TeslaCam recordings and manage the USB drive.
+
 ![Screen](https://i.imgur.com/B2d4MTY.png)
 
 ## Features
@@ -16,7 +17,7 @@ Quickly and easily skim through TeslaCam recordings and manage the USB drive.
 ### Defender SmartScreen
 If you have Defender SmartScreen enabled on Windows 10, you may get a warning about an "unrecognized app" when trying to install. You can click "More Info" then "Run anyway" to get around the warning.
 
-The reason you get this is because I'm not distributing this behind an established software company, which would require paying hundreds to get a code signed certificate and suddenly become "trusted". This is simply a personal project that I'm sharing.
+The reason you get this is because I'm not distributing this behind an established software company, which would require paying hundreds to get a code signed certificate. This is simply a personal project that I'm sharing.
 
 ## Developing
 At its core, this project uses [Electron](https://electronjs.org/), [Express](https://expressjs.com/), [Vue](https://vuejs.org/), and [Vuetify](https://vuetifyjs.com/en/). To run this locally, simply clone the repo and run `yarn install` or `npm run install`.
@@ -25,6 +26,7 @@ Available tasks
 ```
 electron:serve // Runs development mode
 electron:build // Bundles/packages executable into dist_electron
+electron:generate-icons // Generates build/icons/** from public/icon.png
 ```
 
 This project is built on top of [Electron Builder](https://www.electron.build/) and [vue-cli-plugin-electron-builder](https://github.com/nklayman/vue-cli-plugin-electron-builder). Electron Builder configuration, like build targets, is managed in `vue.config.js`.
