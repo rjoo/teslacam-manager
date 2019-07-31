@@ -1,35 +1,48 @@
 <template>
-  <v-list-item
-    :class="{
-      'grey darken-2': active
-    }"
-    :dark="active"
-    :disabled="disabled"
-    ripple
-    @click="$emit('click')"
-  >
-    <v-list-item-content>
-      <v-list-item-title>{{ title }}</v-list-item-title>
-      <v-list-item-subtitle>
-        {{ subtitle }}
-      </v-list-item-subtitle>
-    </v-list-item-content>
+  <div>
+    <v-subheader
+      v-if="subheader"
+      class="pt-2"
+    >
+      <v-icon class="pr-2">folder</v-icon>
+      {{ subheader }}
+    </v-subheader>
 
-    <v-list-item-avatar>
-      <v-icon v-if="tagged" color="secondary" small>bookmark</v-icon>
-    </v-list-item-avatar>
+    <v-list-item
+      :class="{
+        'video-list-item': true,
+        'grey darken-2': active
+      }"
+      :dark="active"
+      :disabled="disabled"
+      ripple
+      @click="$emit('click')"
+    >
+      <v-list-item-content>
+        <v-list-item-title>{{ title }}</v-list-item-title>
+        <v-list-item-subtitle>
+          {{ subtitle }}
+        </v-list-item-subtitle>
+      </v-list-item-content>
+  
+      <v-list-item-avatar>
+        <v-icon v-if="tagged" color="secondary" small>bookmark</v-icon>
+      </v-list-item-avatar>
+  
+      <v-list-item-action>
+        <v-btn
+          icon
+          small
+          ripple
+          @click.stop="$emit('delete')"
+        >
+          <v-icon small>delete</v-icon>
+        </v-btn>
+      </v-list-item-action>
+    </v-list-item>
 
-    <v-list-item-action>
-      <v-btn
-        icon
-        small
-        ripple
-        @click.stop="$emit('delete')"
-      >
-        <v-icon small>delete</v-icon>
-      </v-btn>
-    </v-list-item-action>
-  </v-list-item>
+    <v-divider></v-divider>
+  </div>
 </template>
 
 <script>
@@ -45,6 +58,11 @@ export default {
       default: false
     },
 
+    subheader: {
+      type: String,
+      default: ''
+    },
+
     subtitle: {
       type: String,
       default: ''
@@ -58,8 +76,14 @@ export default {
     title: {
       type: String,
       default: ''
-    },
+    }
 
   }
 }
 </script>
+
+<style>
+.video-list-item {
+  height: 64px;
+}
+</style>

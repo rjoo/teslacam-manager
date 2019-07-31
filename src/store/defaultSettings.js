@@ -1,7 +1,7 @@
 export default {
   themeDark: true,
   defaultTab: 'recent',
-  savedFolders: false,
+  savedFolders: true,
   video: {
     autoplay: true,
     autoplayNext: false

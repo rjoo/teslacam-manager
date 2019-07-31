@@ -16,7 +16,7 @@ module.exports = {
             builderOptions: {
                 appId: "com.tcmanager.app",
                 win: {
-                    target: ["portable"]
+                    target: ["msi"]
                 },
                 productName: 'TeslaCam Manager'
             },

@@ -1,5 +1,9 @@
 <template>
-  <v-list dense>
+  <v-list
+    ref="list"
+    dense
+    v-resize="onResize"
+  >
     <v-list-item
       v-if="!hasVideos"
     >
@@ -9,59 +13,49 @@
     </v-list-item>
 
     <!-- Folders View -->
-    <v-list-group
+    <virtual-list
       v-else-if="type === 'saved' && $store.state.settings.savedFolders"
       v-for="group in videosByGroup"
-      v-model="group.active"
       :key="group.groupId"
-      prepend-icon="folder"
+      :size="scrollItemSize"
+      :remain="scrollItemRemain"
+      :scrollelement="scrollParent"
     >
-      <template v-slot:activator>
-        <v-list-item-title>{{ group.groupId }}</v-list-item-title>
-      </template>
-
-      <video-list-item
-        v-for="video in group.list"
-        :key="video.id"
-        :id="video.id"
-        :active="current.type === type && current.id === video.id"
-        :disabled="disableItem === video.id"
-        :tagged="isTagged(video.id)"
-        :title="formatDate(video.timestamp)"
-        :subtitle="`${sizeToMB(video.size)} MB`"
-        @click.native.stop="onListItemClick(video, group)"
-        @delete="onListItemDeleteClick(video)"
-      ></video-list-item>
-    </v-list-group>
+      <v-list-group
+        v-model="group.active"
+        :key="group.groupId"
+        prepend-icon="folder"
+      >
+        <template v-slot:activator>
+          <v-list-item-title>{{ group.groupId }}</v-list-item-title>
+        </template>
+        <video-list-item
+          v-for="video in group.list"
+          :key="video.id"
+          :id="video.id"
+          :active="current.type === type && current.id === video.id"
+          :disabled="disableItem === video.id"
+          :tagged="isTagged(video.id)"
+          :title="formatDate(video.timestamp)"
+          :subtitle="`${sizeToMB(video.size)} MB`"
+          @click.native.stop="onListItemClick(video, group)"
+          @delete="onListItemDeleteClick(video)"
+        ></video-list-item>
+      </v-list-group>
+    </virtual-list>
     
     <!-- Flat View -->
-    <template
+    <virtual-list
       v-else
-      v-for="(video, i) in videos"
+      :size="scrollItemSize"
+      :remain="scrollItemRemain"
+      :scrollelement="scrollParent"
+
+      :item="videoListItem"
+      :itemcount="videos.length"
+      :itemprops="getVideoListItemProps"
     >
-      <v-subheader
-        v-if="(video.groupId && i === 0) || (videos[i - 1] && video.groupId !== videos[i - 1].groupId)"
-        class="pt-2"
-        :key="video.groupId"
-      >
-        <v-icon class="pr-2">folder</v-icon>
-        {{ video.groupId }}
-      </v-subheader>
-
-      <video-list-item
-       :key="video.id"
-       :id="video.id"
-       :active="current.type === type && current.id === video.id"
-       :disabled="disableItem === video.id"
-       :tagged="isTagged(video.id)"
-       :title="formatDate(video.timestamp)"
-       :subtitle="`${sizeToMB(video.size)} MB`"
-       @click="onListItemClick(video)"
-       @delete="onListItemDeleteClick(video)"
-      ></video-list-item>
-
-      <v-divider :key="i"></v-divider>
-    </template>
+    </virtual-list>
 
     <v-dialog
       v-model="confirmDelete"
@@ -93,22 +87,32 @@
 </template>
 
 <script>
+import VirtualList from 'vue-virtual-scroll-list'
 import VideoListItem from './VideoListItem';
 import { addSeconds, format } from 'date-fns'
 import goTo from 'vuetify/es5/services/goto'
 
 export default {
   components: {
-    VideoListItem
+    VideoListItem,
+    VirtualList
   },
 
   data() {
     return {
       confirmDelete: false,
+      scrollItemSize: 64,
+      scrollItemRemain: 24,
+      scrollParent: null,
+      videoListItem: VideoListItem,
       videoToDelete: {
         videos: []
       }
     }
+  },
+
+  created() {
+    this.scrollParent = document.querySelector('#nav-drawer .v-navigation-drawer__content')
   },
 
   computed: {
@@ -216,14 +220,39 @@ export default {
       return format(addSeconds(new Date(null), parseInt(seconds)), 'mm:ss')
     },
 
+    getVideoListItemProps(idx) {
+      const vid = this.videos[idx]
+      const needsSubheader = (vid.groupId && idx === 0) || 
+        (this.videos[idx - 1] && vid.groupId !== this.videos[idx - 1].groupId)
+
+      return {
+        key: vid.id,
+        attrs: {
+          id: vid.id
+        },
+        props: {
+          active: this.current.type === this.type && this.current.id === vid.id,
+          disabled: this.disableItem == vid.id,
+          tagged: this.isTagged(vid.id),
+          title: this.formatDate(vid.timestamp),
+          subheader: needsSubheader ? vid.groupId : '',
+          subtitle: `${this.sizeToMB(vid.size)} MB`,
+        },
+        on: {
+          click: this.onListItemClick.bind(this, vid),
+          delete: this.onListItemDeleteClick.bind(this, vid)
+        },
+      }
+    },
+
     onListItemClick(video, group) {
       this.$store.commit(
         'SET_CURRENTLY_PLAYING',
         video
       )
 
-      if (group && !group.active) {
-        group.active = true
+      if (group) {
+        group.active = !group.active
       }
     },
 
@@ -234,6 +263,14 @@ export default {
 
     onDeleteConfirm() {
       this.$emit('delete', this.videoToDelete)
+    },
+
+    onResize() {
+      const h = document.getElementById('nav-drawer').offsetHeight
+
+      if (h) {
+        this.scrollItemRemain = parseInt(h / this.scrollItemSize) + 1
+      }
     },
 
     isTagged(id) {

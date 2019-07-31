@@ -1,5 +1,6 @@
 {
   "name": "teslacam-manager",
+  "author": "Ross Joo <ross.joo@gmail.com>",
   "repository": "github:rjoo/teslacam-manager",
   "version": "0.1.0",
   "private": true,
@@ -33,6 +34,7 @@
     "nanoid": "^2.0.3",
     "trash": "^6.0.0",
     "vue": "^2.6.10",
+    "vue-virtual-scroll-list": "^1.4.1",
     "vuetify": "^2.0.0",
     "vuex": "^3.1.1",
     "vuex-persistedstate": "^2.5.4",

@@ -18,8 +18,6 @@ server.get('/', (req, res) => {
  */
 server.get('/video', (req, res) => {
   let filepath = req.query.filepath
-
-  log.info(`Requested to play ${filepath}`)
   
   if (tcam.isVideoFilepath(filepath))
     res.sendFile(filepath)

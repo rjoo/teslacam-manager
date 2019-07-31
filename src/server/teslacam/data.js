@@ -78,6 +78,7 @@ function makeId(timestamp) {
  * Get video data
  * @param {Object} paths Path to ff binaries and teslacam dir
  * @param {String} type 'recent' or 'saved'
+ * @todo Test limits
  */
 export const getData = (paths = {}, type = 'recent') => {
   let videosPath = paths.teslaCamDir
@@ -124,6 +125,9 @@ export const getData = (paths = {}, type = 'recent') => {
   ]
 
   log.info(`Found ${videos.length} ${type} videos`)
+
+  // Set some kind of arbitrary limit for now
+  videos = videos.slice(0, 4000)
 
   videos.sort((a, b) => 
     new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
