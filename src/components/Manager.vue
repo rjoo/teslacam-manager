@@ -12,6 +12,20 @@
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn
+              class="select-folder-btn"
+              icon
+              v-on="on"
+              @click="locateFolder"
+            >
+              <v-icon small>folder_special</v-icon>
+            </v-btn>
+          </template>
+          <span>Manually select TeslaCam folder</span>
+        </v-tooltip>
+
+        <v-tooltip bottom>
+          <template v-slot:activator="{ on }">
+            <v-btn
               class="refresh-btn"
               icon
               v-on="on"
@@ -26,7 +40,7 @@
         <v-tooltip bottom>
           <template v-slot:activator="{ on }">
             <v-btn
-              class="refresh-btn"
+              class="open-folder-btn"
               icon
               v-on="on"
               @click="openFolder"
@@ -122,8 +136,8 @@
       <template v-slot:append>
         <v-toolbar color="grey darken-4" dark flat>
           <disk-usage
-            v-if="teslaCamMnt && Object.keys(diskUsageData).length > 0"
-            :info="{ ...diskUsageData, mnt: teslaCamMnt }">
+            v-if="teslaCamDrive && Object.keys(diskUsageData).length > 0"
+            :info="{ ...diskUsageData, mnt: teslaCamDrive }">
           </disk-usage>
         </v-toolbar>
       </template>
@@ -156,7 +170,7 @@
       </v-card>
     </v-dialog>    
 
-    <v-dialog
+    <!-- <v-dialog
       v-model="errors.binaries"
       max-width="340"
       persistent
@@ -169,11 +183,11 @@
           <v-btn @click="doSetup">Retry</v-btn>
         </v-card-actions>
       </v-card>
-    </v-dialog>
+    </v-dialog> -->
 
     <v-dialog
       v-model="errors.drive"
-      max-width="340"
+      max-width="420"
       persistent
     >
       <v-card>
@@ -181,7 +195,38 @@
         <v-card-text>Unable to detect a drive on your computer that contains the root <em>TeslaCam</em> directory</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn @click="getData(tab, true)">Try again</v-btn>
+          <v-btn color="primary" @click="getData(tab, true)">Try again</v-btn>
+          <v-btn @click="locateFolder">Manually Locate</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      v-model="errors.locateFolder"
+      max-width="420"
+    >
+      <v-card>
+        <v-card-title>Can't determine TeslaCam folder</v-card-title>
+        <v-card-text>The folder selected should have the <em>RecentClips</em> and/or <em>SavedClips</em> subfolders</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="locateFolder">Manually Locate</v-btn>
+          <v-btn @click="errors.locateFolder = false">Cancel</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <v-dialog
+      v-model="confirm.saveManualFolder"
+      max-width="420"
+    >
+      <v-card>
+        <v-card-title>Save this folder?</v-card-title>
+        <v-card-text>Confirm you want to automatically use this folder the next time you open TeslaCam Manager.</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="primary" @click="storeCurrentFolder">Save</v-btn>
+          <v-btn @click="confirm.saveManualFolder = false">No</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -206,8 +251,9 @@ import DiskUsage from '@/components/DiskUsage.vue'
 import VideoList from '@/components/VideoList.vue'
 import VideoPlayer from '@/components/VideoPlayer.vue'
 import path from 'path'
+import fs from 'fs'
 import { getEndpointUrl } from '@/api'
-import { shell } from 'electron'
+import { shell, remote } from 'electron'
 
 export default {
   name: 'Manager',
@@ -223,20 +269,25 @@ export default {
     return {
       isLoading: false,
       isSettingUp: false,
+      isManualFolder: false,
       ffPaths: {},
       teslaCamDir: '', // eg. D:/TeslaCam
-      teslaCamMnt: '', // eg. D:/
+      teslaCamDrive: '', // eg. D:/
       recentVideosData: [],
       savedVideosData: [],
       diskUsageData: {},
       confirmDeleteAll: false,
       deletingVideo: '',
+      confirm: {
+        saveManualFolder: false
+      },
       errors: {
         binaries: false,
         delete: false,
         deleteMessage: '',
         drive: false,
-        data: false
+        data: false,
+        manualFolder: false,
       },
       tab: this.$store.state.settings.defaultTab === 'recent' ? 0 : 1
     }
@@ -282,6 +333,10 @@ export default {
   },
 
   created() {
+    // Retreive stored TeslaCam path data
+    this.teslaCamDir = this.$store.state.settings.tcam.folder
+    this.teslaCamDrive = this.$store.state.settings.tcam.drive
+
     // this.doSetup().then(this.getData)
     this.getData()
   },
@@ -290,28 +345,28 @@ export default {
     /**
      * @todo ffmpeg is not needed right now
      */
-    async doSetup() {
-      let response
-      this.isSettingUp = true
-      this.errors.binaries = false
+    // async doSetup() {
+    //   let response
+    //   this.isSettingUp = true
+    //   this.errors.binaries = false
 
-      try {
-        response = await this.$http.get(getEndpointUrl('ffbinaries'))
-        this.ffPaths = response.data
-      } catch(e) {
-        console.error(e)
-        this.errors.binaries = true
-        return
-      }
+    //   try {
+    //     response = await this.$http.get(getEndpointUrl('ffbinaries'))
+    //     this.ffPaths = response.data
+    //   } catch(e) {
+    //     console.error(e)
+    //     this.errors.binaries = true
+    //     return
+    //   }
 
-      this.isSettingUp = false
-    },
+    //   this.isSettingUp = false
+    // },
 
     async getDriveStorage() {
       let response
       try {
         response = await this.$http.post(getEndpointUrl('teslacam/checkstorage'), {
-          path: this.teslaCamMnt
+          path: this.teslaCamDrive
         })
 
         this.diskUsageData = response.data
@@ -321,24 +376,32 @@ export default {
       }
     },
 
+    clearData() {
+      this.savedVideosData = []
+      this.recentVideosData = []
+    },
+
     async getData(refresh = false) {
       if (this.isSettingUp)
         return
 
       this.errors.drive = false
 
-      // Use existing dir if not manually refreshed
-      if (!this.teslaCamDir || refresh) {
+      // Use existing dir if not refreshed
+      if (!this.teslaCamDir || (refresh && !this.isManualFolder)) {
         try {
           const response = await this.$http.get(getEndpointUrl('teslacam/scandrives'))
           this.teslaCamDir = response.data.dir
-          this.teslaCamMnt = response.data.mnt
+          this.teslaCamDrive = response.data.mnt
 
-          if (!this.teslaCamDir)
+          if (!this.teslaCamDir) {
             this.errors.drive = true
+            return
+          }
         } catch(e) {
           console.error(e)
           this.errors.drive = true
+          return
         }
       }
 
@@ -503,6 +566,56 @@ export default {
           this.tabType === 'recent' ? 'RecentClips' : 'SavedClips'
         )
       )
+    },
+
+    locateFolder() {
+      try {
+        // Show dialog to select the folder
+        const result = remote.dialog.showOpenDialog(null, {
+          title: 'Select the TeslaCam folder',
+          properties: ['openDirectory']
+        })
+        const tcamPath = result && result[0]
+
+        if (!tcamPath)
+          return
+
+        // Verify the folder
+        const files = fs.readdirSync(result[0])
+        let hasRecentOrSaved = false
+        files.forEach(file => {
+          if (fs.lstatSync(path.join(tcamPath, file)).isDirectory() &&
+            file === 'RecentClips' || file === 'SavedClips')
+            hasRecentOrSaved = true
+        })
+        
+        if (hasRecentOrSaved) {
+          this.errors.drive = this.errors.locateFolder = false
+          this.teslaCamDir = tcamPath
+          this.teslaCamDrive = path.parse(tcamPath).root
+          this.isManualFolder = true
+          
+          this.clearData()
+          this.getData()
+
+          this.confirm.saveManualFolder = true
+        } else {
+          this.errors.drive = false
+          this.errors.locateFolder = true
+        }
+      } catch (e) {
+        this.errors.drive = false
+        this.errors.locateFolder = true
+      }
+    },
+
+    storeCurrentFolder() {
+      this.confirm.saveManualFolder = false
+
+      this.$store.commit('SET_TCAM_FOLDER', {
+        path: this.teslaCamDir,
+        drive: this.teslaCamDrive
+      })
     }
   },
 }

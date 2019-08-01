@@ -55,6 +55,26 @@
               </v-list-item-content>
             </v-list-item>
 
+            <v-list-item v-if="settings.tcam.folder">
+              <v-list-item-action>
+                <v-btn
+                  color="warning"
+                  @click="clearTcamSettings"
+                >Forget</v-btn>
+              </v-list-item-action>
+              <v-list-item-content>
+                <v-text-field
+                  :value="settings.tcam.folder"
+                  hint="Forget the stored path to TeslaCam. Will try automatic USB detection on next startup."
+                  label="Saved TeslaCam Path"
+                  outlined
+                  persistent-hint
+                  prepend-inner-icon="folder_special"
+                  disabled
+                ></v-text-field>
+              </v-list-item-content>
+            </v-list-item>
+
             <v-subheader>Video</v-subheader>
             <v-list-item>
               <v-list-item-action>
@@ -105,7 +125,7 @@ export default {
 
   data() {
     return {
-      settings: defaultSettings,
+      settings: deepmerge({}, defaultSettings),
       showSettings: false,
       tabItems: [
         { label: 'Recent', value: 'recent' },
@@ -116,6 +136,13 @@ export default {
 
   created() {
     this.reset()
+  },
+
+  watch: {
+    showSettings(showing) {
+      if (showing)
+        this.reset()
+    }
   },
 
   mounted() {
@@ -136,6 +163,11 @@ export default {
 
     reset() {
       this.settings = deepmerge({}, this.$store.state.settings)
+    },
+
+    clearTcamSettings() {
+      this.settings.tcam.folder = ''
+      this.settings.tcam.drive = ''
     }
   }
 }

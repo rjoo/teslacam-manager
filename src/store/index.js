@@ -19,9 +19,14 @@ export default new Vuex.Store({
       type: '',
       videos: []
     },
-
     settings: deepmerge({}, defaultSettings),
     taggedVideoIds: []
+  },
+
+  getters: {
+    settings(state) {
+      return state.settings
+    }
   },
 
   mutations: {
@@ -70,6 +75,16 @@ export default new Vuex.Store({
 
     'UPDATE_SETTINGS': (state, payload) => {
       state.settings = payload
+    },
+
+    'SET_TCAM_FOLDER': (state, { path, drive }) => {
+      state.settings.tcam.folder = path
+      state.settings.tcam.drive = drive
+    },
+
+    'UNSET_TCAM_FOLDER': (state) => {
+      state.settings.tcam.folder = ''
+      state.settings.tcam.drive = ''
     }
   }
 })
