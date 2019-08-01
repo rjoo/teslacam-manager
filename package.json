@@ -2,7 +2,7 @@
   "name": "teslacam-manager",
   "author": "Ross Joo <ross.joo@gmail.com>",
   "repository": "github:rjoo/teslacam-manager",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
