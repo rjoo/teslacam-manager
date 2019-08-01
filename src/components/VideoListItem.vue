@@ -24,20 +24,25 @@
           {{ subtitle }}
         </v-list-item-subtitle>
       </v-list-item-content>
-  
-      <v-list-item-avatar>
-        <v-icon v-if="tagged" color="secondary" small>bookmark</v-icon>
-      </v-list-item-avatar>
-  
+
       <v-list-item-action>
-        <v-btn
-          icon
-          small
-          ripple
-          @click.stop="$emit('delete')"
-        >
-          <v-icon small>delete</v-icon>
-        </v-btn>
+        <v-item-group>
+          <v-btn
+            icon
+            small
+            @click.stop="$emit('toggle-tag')"
+          >
+            <v-icon :color="tagged ? 'secondary' : 'default'" small>bookmark</v-icon>
+          </v-btn>
+          
+          <v-btn
+            icon
+            small
+            @click.stop="$emit('delete')"
+          >
+            <v-icon small>delete</v-icon>
+          </v-btn>
+        </v-item-group>
       </v-list-item-action>
     </v-list-item>
 

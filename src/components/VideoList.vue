@@ -40,6 +40,7 @@
           :subtitle="`${sizeToMB(video.size)} MB`"
           @click.native.stop="onListItemClick(video, group)"
           @delete="onListItemDeleteClick(video)"
+          @toggle-tag="onToggleTag(video)"
         ></video-list-item>
       </v-list-group>
     </virtual-list>
@@ -240,7 +241,8 @@ export default {
         },
         on: {
           click: this.onListItemClick.bind(this, vid),
-          delete: this.onListItemDeleteClick.bind(this, vid)
+          delete: this.onListItemDeleteClick.bind(this, vid),
+          'toggle-tag': this.onToggleTag.bind(this, vid)
         },
       }
     },
@@ -270,6 +272,14 @@ export default {
 
       if (h) {
         this.scrollItemRemain = parseInt(h / this.scrollItemSize) + 1
+      }
+    },
+
+    onToggleTag(video) {
+      if (this.$store.state.taggedVideoIds.includes(video.id)) {
+        this.$store.commit('REMOVE_TAGGED', video.id)
+      } else {
+        this.$store.commit('ADD_TAGGED', video.id)
       }
     },
 
