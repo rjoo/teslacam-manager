@@ -14,6 +14,9 @@ Quickly and easily skim through TeslaCam recordings and manage the USB drive.
 ## Installation
 [Download Release for Windows](https://github.com/rjoo/teslacam-manager/releases)
 
+### HW3 Support
+Due to Electron's usage of Chromium, and Chromium's lack of support for HEVC (h.265) playback, recordings from Teslas equipped with HW3 will not work. I'm open to some suggestions for workarounds!
+
 ### Defender SmartScreen
 If you have Defender SmartScreen enabled on Windows 10, you may get a warning about an "unrecognized app" when trying to install. You can click "More Info" then "Run anyway" to get around the warning.
 
