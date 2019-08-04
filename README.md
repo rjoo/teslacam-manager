@@ -23,7 +23,7 @@ If you have Defender SmartScreen enabled on Windows 10, you may get a warning ab
 The reason you get this is because I'm not distributing this behind an established software company, which would require paying hundreds to get a code signed certificate. This is simply a personal project that I'm sharing.
 
 ## Developing
-At its core, this project uses [Electron](https://electronjs.org/), [Express](https://expressjs.com/), [Vue](https://vuejs.org/), and [Vuetify](https://vuetifyjs.com/en/). To run this locally, simply clone the repo and run `yarn install` or `npm run install`.
+At its core, this project uses [Electron](https://electronjs.org/), [Express](https://expressjs.com/), [Vue](https://vuejs.org/), and [Vuetify](https://vuetifyjs.com/en/). To run this locally, simply clone the repo and run `yarn install` or `npm install`.
 
 Available tasks
 ```
