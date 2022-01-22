@@ -31,7 +31,7 @@
     "ffprobe": "^1.1.0",
     "ffprobe-static": "^3.0.0",
     "hashids": "^1.2.2",
-    "nanoid": "^2.0.3",
+    "nanoid": "^3.1.31",
     "trash": "^6.0.0",
     "vue": "^2.6.10",
     "vue-virtual-scroll-list": "^1.4.1",
