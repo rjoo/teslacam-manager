@@ -2,13 +2,14 @@
   "name": "teslacam-manager",
   "author": "Ross Joo <ross.joo@gmail.com>",
   "repository": "github:rjoo/teslacam-manager",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
     "electron:build": "vue-cli-service electron:build",
+    "electron:build:mac": "PYTHON_PATH=$(which python) vue-cli-service electron:build",
     "electron:serve": "vue-cli-service electron:serve",
     "electron:generate-icons": "electron-icon-builder --input=./public/icon.png --output=build --flatten",
     "postinstall": "electron-builder install-app-deps",
@@ -16,58 +17,64 @@
   },
   "main": "background.js",
   "dependencies": {
-    "axios": "^0.19.0",
-    "core-js": "^2.6.5",
+    "@electron/remote": "^2.0.8",
+    "axios": "^0.27.2",
+    "core-js": "^3.23.3",
     "cors": "^2.8.5",
-    "date-fns": "^1.30.1",
-    "deepmerge": "^4.0.0",
+    "date-fns": "^2.28.0",
+    "deepmerge": "^4.2.2",
     "diskusage": "^1.1.3",
-    "drivelist": "^8.0.6",
-    "electron": "^3.0.0",
-    "electron-log": "^3.0.6",
-    "express": "^4.17.1",
-    "ffbinaries": "^1.1.3",
-    "ffmpeg-static-electron": "^2.0.1",
-    "ffprobe": "^1.1.0",
-    "ffprobe-static": "^3.0.0",
-    "hashids": "^1.2.2",
-    "nanoid": "^2.0.3",
-    "trash": "^6.0.0",
+    "drivelist": "^11.0.0",
+    "electron": "^19.0.7",
+    "electron-log": "^4.4.8",
+    "express": "^4.18.1",
+    "ffbinaries": "^1.1.4",
+    "ffmpeg-static-electron": "^2.0.3",
+    "ffprobe": "^1.1.2",
+    "ffprobe-static": "^3.1.0",
+    "hashids": "^2.2.10",
+    "nanoid": "^4.0.0",
+    "trash": "^8.1.0",
     "vue": "^2.6.10",
-    "vue-virtual-scroll-list": "^1.4.1",
-    "vuetify": "^2.0.0",
+    "vue-virtual-scroll-list": "^2.3.3",
+    "vuetify": "^2.6.7",
     "vuex": "^3.1.1",
-    "vuex-persistedstate": "^2.5.4",
-    "webpack-node-externals": "^1.7.2"
+    "vuex-persistedstate": "^2.5.4"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.9.0",
-    "@vue/cli-plugin-eslint": "^3.9.0",
-    "@vue/cli-service": "^3.9.0",
-    "babel-eslint": "^10.0.1",
-    "electron-icon-builder": "^1.0.1",
-    "eslint": "^5.16.0",
-    "eslint-plugin-vue": "^5.0.0",
-    "eslint-plugin-vuetify": "^1.0.0-beta.3",
-    "fibers": "^4.0.1",
-    "nodemon": "^1.19.1",
-    "sass": "^1.22.7",
-    "sass-loader": "^7.1.0",
-    "stylus": "^0.54.5",
-    "stylus-loader": "^3.0.1",
-    "vue-cli-plugin-electron-builder": "^1.3.6",
-    "vue-cli-plugin-vuetify": "^0.5.0",
-    "vue-template-compiler": "^2.6.10",
-    "vuetify-loader": "1.3.0"
+    "@babel/eslint-parser": "^7.18.2",
+    "@vue/cli-plugin-babel": "^5.0.7",
+    "@vue/cli-plugin-eslint": "^5.0.7",
+    "@vue/cli-service": "^5.0.7",
+    "electron-icon-builder": "^2.0.1",
+    "eslint": "^8.19.0",
+    "eslint-plugin-vue": "^9.1.1",
+    "eslint-plugin-vuetify": "^1.1.0",
+    "fibers": "^5.0.1",
+    "nodemon": "^2.0.18",
+    "sass": "^1.53.0",
+    "sass-loader": "^13.0.2",
+    "stylus": "^0.58.1",
+    "stylus-loader": "^7.0.0",
+    "vue-cli-plugin-electron-builder": "^2.1.1",
+    "vue-cli-plugin-vuetify": "^2.5.1",
+    "vue-template-compiler": "^2.7.2",
+    "vuetify-loader": "1.9.0"
+  },
+  "overrides": {
+    "vue-cli-plugin-electron-builder": {
+      "electron-builder": "^23.1.0"
+    }
   },
   "eslintConfig": {
     "root": true,
     "env": {
+      "browser": true,
       "node": true
     },
     "extends": [
-      "plugin:vue/essential",
-      "eslint:recommended"
+      "eslint:recommended",
+      "plugin:vue/essential"
     ],
     "plugins": [
       "vuetify"
@@ -77,7 +84,7 @@
       "vuetify/no-deprecated-classes": "error"
     },
     "parserOptions": {
-      "parser": "babel-eslint"
+      "parser": "@babel/eslint-parser"
     }
   },
   "postcss": {

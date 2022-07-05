@@ -132,7 +132,7 @@
           </video-list>
         </v-tab-item>
       </v-tabs>
-      
+
       <template v-slot:append>
         <v-toolbar color="grey darken-4" dark flat>
           <disk-usage
@@ -143,12 +143,12 @@
       </template>
     </v-navigation-drawer>
 
-    <v-content>
+    <v-main>
       <video-player
         @next="onPlayNext"
         @prev="onPlayPrev"
       />
-    </v-content>
+    </v-main>
 
     <v-dialog
       v-model="isSettingUp"
@@ -168,7 +168,7 @@
           />
         </v-card-text>
       </v-card>
-    </v-dialog>    
+    </v-dialog>
 
     <!-- <v-dialog
       v-model="errors.binaries"
@@ -240,7 +240,7 @@
         <v-card-text>{{ errors.deleteMessage }}</v-card-text>
       </v-card>
     </v-dialog>
-    
+
     <app-settings></app-settings>
   </v-app>
 </template>
@@ -253,10 +253,11 @@ import VideoPlayer from '@/components/VideoPlayer.vue'
 import path from 'path'
 import fs from 'fs'
 import { getEndpointUrl } from '@/api'
-import { shell, remote } from 'electron'
+import { shell } from 'electron'
+const remote = require('@electron/remote')
 
 export default {
-  name: 'Manager',
+  name: 'ManagerItem',
 
   components: {
     AppSettings,
@@ -324,7 +325,7 @@ export default {
     },
 
     currentlyPlayingIdx() {
-      let idx = this.currentlyPlayingVideosData.findIndex(vid => 
+      let idx = this.currentlyPlayingVideosData.findIndex(vid =>
         vid.id === this.$store.state.current.id
       )
 
@@ -444,7 +445,7 @@ export default {
       else if (this.tabType === 'saved')
         this.savedVideosData = []
 
-      /** 
+      /**
        * Add a slight delay because getData fails in trying to read the files that were just deleted
        */
       setTimeout(() => this.getData(), 200)
@@ -508,7 +509,7 @@ export default {
         try {
           const response = await this.$http.post(
             getEndpointUrl('teslacam/delete'),
-            { 
+            {
               useTrash: this.$store.state.settings.trash,
               type: video.type,
               videos: video.videos.map(vid => vid.filepath)
@@ -560,8 +561,9 @@ export default {
     },
 
     openFolder() {
-      shell.openItem(
+     shell.openExternal(
         path.join(
+          'file://',
           this.teslaCamDir,
           this.tabType === 'recent' ? 'RecentClips' : 'SavedClips'
         )
@@ -588,13 +590,13 @@ export default {
             file === 'RecentClips' || file === 'SavedClips')
             hasRecentOrSaved = true
         })
-        
+
         if (hasRecentOrSaved) {
           this.errors.drive = this.errors.locateFolder = false
           this.teslaCamDir = tcamPath
           this.teslaCamDrive = path.parse(tcamPath).root
           this.isManualFolder = true
-          
+
           this.clearData()
           this.getData()
 

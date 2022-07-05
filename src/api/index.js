@@ -1,6 +1,6 @@
-import { remote } from 'electron'
+const process = require('@electron/remote').process
 
-const baseUrl = `http://localhost:${remote.process.env.SERVER_PORT}`
+const baseUrl = `http://localhost:${process.env.SERVER_PORT}`
 
 export const getEndpointUrl = (endpoint) => {
   return `${baseUrl}/${endpoint}`
