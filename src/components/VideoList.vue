@@ -44,7 +44,7 @@
         ></video-list-item>
       </v-list-group>
     </virtual-list>
-    
+
     <!-- Flat View -->
     <virtual-list
       v-else
@@ -90,7 +90,7 @@
 <script>
 import VirtualList from 'vue-virtual-scroll-list'
 import VideoListItem from './VideoListItem';
-import { addSeconds, format } from 'date-fns'
+import { addSeconds, format, parseISO } from 'date-fns'
 import goTo from 'vuetify/es5/services/goto'
 
 export default {
@@ -122,7 +122,7 @@ export default {
     },
 
     hasVideos() {
-      return this.videos.length
+      return !!this.videos.length
     },
 
     videosByGroup() {
@@ -158,7 +158,7 @@ export default {
         let timeout = 0
 
         if (this.type === 'saved') {
-          const group = this.videosByGroup.find(g => g.groupId === this.$store.state.current.groupId) 
+          const group = this.videosByGroup.find(g => g.groupId === this.$store.state.current.groupId)
           if (group && !group.active) {
             this.videosByGroup.forEach(g => g.active = false)
             group.active = true
@@ -214,7 +214,7 @@ export default {
 
   methods: {
     formatDate(date) {
-      return format(date, 'ddd, MM/DD h:mm A')
+      return format(parseISO(date), 'eee, MM/dd h:mm a')
     },
 
     formatDuration(seconds) {
@@ -223,7 +223,7 @@ export default {
 
     getVideoListItemProps(idx) {
       const vid = this.videos[idx]
-      const needsSubheader = (vid.groupId && idx === 0) || 
+      const needsSubheader = (vid.groupId && idx === 0) ||
         (this.videos[idx - 1] && vid.groupId !== this.videos[idx - 1].groupId)
 
       return {

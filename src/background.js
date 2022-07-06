@@ -1,6 +1,7 @@
 'use strict'
 
 import { app, protocol, BrowserWindow } from 'electron'
+require('@electron/remote/main').initialize()
 import {
   createProtocol,
   installVueDevtools
@@ -13,7 +14,7 @@ const isDevelopment = process.env.NODE_ENV !== 'production'
 let win
 
 // Scheme must be registered before the app is ready
-protocol.registerStandardSchemes(['app'], { secure: true })
+protocol.registerSchemesAsPrivileged([{ scheme: 'app', privileges: { standard: true, secure: true, supportFetchAPI: true } }]);
 
 function createWindow () {
   // Create the browser windows.
@@ -22,9 +23,11 @@ function createWindow () {
     height: 900,
     icon: path.join(__static, 'icon.png'),
     webPreferences: {
-      nodeIntegration: true
-    }
+      nodeIntegration: true,
+      contextIsolation: false
+    },
   })
+  require("@electron/remote/main").enable(win.webContents)
 
   if (process.env.WEBPACK_DEV_SERVER_URL) {
     // Load the url of the dev server if in development mode

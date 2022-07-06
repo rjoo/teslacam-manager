@@ -18,7 +18,7 @@ server.get('/', (req, res) => {
  */
 server.get('/video', (req, res) => {
   let filepath = req.query.filepath
-  
+
   if (tcam.isVideoFilepath(filepath))
     res.sendFile(filepath)
   else
@@ -92,7 +92,7 @@ server.post('/teslacam/data', async (req, res) => {
 
   log.info('Requested to get video data')
 
-  try { 
+  try {
     data = await tcam.getData(paths, type)
   } catch (err) {
     return res.status(500).json({

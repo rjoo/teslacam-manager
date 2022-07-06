@@ -55,7 +55,7 @@
             @pause="isPlaying = false"
             @play="isPlaying = true"
             @timeupdate="onTimeUpdate($event, cam)" />
-  
+
           <v-card class="video-overlay" dark>
             <v-layout column fill-height justify-space-between>
               <v-card-title>
@@ -158,7 +158,7 @@
                 @click="isTagged ? onUntag() : onTag()"
               ></tag-btn>
               <upload-btn></upload-btn>
-            </v-flex> 
+            </v-flex>
             <v-flex xs4>
               <v-layout align-center justify-center>
                 <play-prev-btn :disabled="!hasCurrentlyPlaying" @click="$emit('prev')"></play-prev-btn>
@@ -177,7 +177,7 @@
                   @click="$root.$emit('show-settings')"
                 ><v-icon>settings</v-icon></v-btn>
               </v-layout>
-            </v-flex> 
+            </v-flex>
           </v-layout>
         </v-container>
       </v-flex>
@@ -195,7 +195,7 @@ import TagBtn from './controls/TagBtn'
 import UploadBtn from './controls/UploadBtn'
 import VideoElement from './VideoElement'
 import { getEndpointUrl } from '@/api'
-import { addSeconds, format } from 'date-fns'
+import { addSeconds, format, parseISO } from 'date-fns'
 import { shell } from 'electron'
 
 const debounce = (fn, time) => {
@@ -203,7 +203,7 @@ const debounce = (fn, time) => {
 
   return function() {
     const functionCall = () => fn.apply(this, arguments);
-    
+
     clearTimeout(timeout);
     timeout = setTimeout(functionCall, time);
   }
@@ -228,7 +228,7 @@ export default {
       isPlaying: true,
       maxDuration: 0,
       maxDurationCam: '',
-    } 
+    }
   },
 
   created() {
@@ -297,8 +297,8 @@ export default {
   },
 
   methods: {
-    formatDate(date, fmt = 'dddd, MM/DD [@] h:mm A') {
-      return format(date, fmt)
+    formatDate(date, fmt = 'eeee, MM/dd [@] h:mm a') {
+      return format(parseISO(date), fmt)
     },
 
     formatDuration(seconds) {
@@ -320,7 +320,7 @@ export default {
     },
 
     getVideoElement(camera) {
-      return this.$refs.videos.find(vid => 
+      return this.$refs.videos.find(vid =>
         vid.$el.classList.contains(`video-${camera}`)
       ).$el
     },
@@ -336,7 +336,7 @@ export default {
     openVideoFile(camera) {
       const vid = this.getVideoData(camera)
       this.pause()
-      shell.openItem(vid.filepath)
+      shell.openExternal(`file://${vid.filepath}`)
     },
 
     playPause() {
@@ -380,7 +380,7 @@ export default {
         }
       }
     },
-  
+
     onLoaded(e, cam) {
       const duration = e.target.duration
 
