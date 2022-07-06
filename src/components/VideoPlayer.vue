@@ -195,7 +195,7 @@ import TagBtn from './controls/TagBtn'
 import UploadBtn from './controls/UploadBtn'
 import VideoElement from './VideoElement'
 import { getEndpointUrl } from '@/api'
-import { addSeconds, format } from 'date-fns'
+import { addSeconds, format, parseISO } from 'date-fns'
 import { shell } from 'electron'
 
 const debounce = (fn, time) => {
@@ -297,8 +297,8 @@ export default {
   },
 
   methods: {
-    formatDate(date, fmt = 'dddd, MM/DD [@] h:mm A') {
-      return format(date, fmt)
+    formatDate(date, fmt = 'eeee, MM/dd [@] h:mm a') {
+      return format(parseISO(date), fmt)
     },
 
     formatDuration(seconds) {

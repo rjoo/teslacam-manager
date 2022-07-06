@@ -8,6 +8,7 @@ module.exports = {
         // })
         config.resolve.alias.set('fs', false);
         config.resolve.alias.set('path', false);
+        config.optimization.minimize(process.env.NODE_ENV === 'production')
     },
 
 

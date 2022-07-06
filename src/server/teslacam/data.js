@@ -129,7 +129,7 @@ export const getData = (paths = {}, type = 'recent') => {
   // Set some kind of arbitrary limit for now
   videos = videos.slice(0, 4000)
 
-  videos.sort((a, b) => 
+  videos.sort((a, b) =>
     new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
   ).forEach(video => {
     const idx = videosOutput.findIndex(vo => vo.timestamp === video.timestamp)

@@ -110,7 +110,7 @@
 <script>
 /**
  * This component is triggered using this.$root as the EventBus
- * 
+ *
  * @example
  * this.$root.$emit('show-settings')
  */
